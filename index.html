@@ -4,11 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DSE Live Performance Cloud Tracker</title>
-    <!-- Tailwind CSS for clean structural UI layout -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <!-- Dexie.js Wrapper for Local Cache Storage -->
     <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.js"></script>
-    <!-- Supabase CDN Client Library for Cloud Database Integrations -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         .hidden { display: none !important; }
@@ -19,7 +16,6 @@
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
 
-    <!-- ==================== WORKSPACE LOGIN PORTAL SCREEN ==================== -->
     <div id="auth-portal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50">
         <div class="bg-white p-8 rounded-2xl shadow-xl border border-slate-200 max-w-md w-full mx-4 space-y-6">
             <div class="text-center space-y-2">
@@ -34,7 +30,7 @@
                 <div>
                     <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Select Your Consultant Profile</label>
                     <select id="portal-user-selector" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-3 text-sm font-semibold focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-none transition-all">
-                        <!-- Loaded Dynamically from Cloud -->
+                        <option value="">-- Local Offline Fallback Profile --</option>
                     </select>
                 </div>
                 
@@ -44,22 +40,21 @@
             </div>
             
             <div class="text-center">
-                <button onclick="bypassToManagerMode()" class="text-xs text-slate-400 hover:text-slate-600 underline transition-colors">
+                <button type="button" onclick="bypassToManagerMode()" class="text-xs text-slate-400 hover:text-slate-600 underline transition-colors cursor-pointer p-2 inline-block">
                     Access Administrative Central Console
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- GLOBAL APPLICATION HEADER -->
     <header class="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center flex-wrap gap-4 sticky top-0 z-40">
         <div class="flex items-center space-x-4">
             <div class="bg-blue-600 text-white px-3 py-1.5 rounded-lg font-black text-lg tracking-tight">DSE</div>
             <div>
                 <h1 class="text-md font-bold text-slate-900 tracking-wide">Performance Matrix Cloud</h1>
             </div>
-            <span id="network-badge" class="px-2.5 py-1 text-[11px] font-bold rounded-full bg-green-500 text-white flex items-center gap-1.5 shadow-sm">
-                <span class="h-1.5 w-1.5 rounded-full bg-white animate-pulse"></span> Online
+            <span id="network-badge" class="px-2.5 py-1 text-[11px] font-bold rounded-full bg-amber-600 text-white flex items-center gap-1.5 shadow-sm">
+                Local Only Mode
             </span>
         </div>
         
@@ -75,10 +70,8 @@
         </div>
     </header>
 
-    <!-- MAIN APP CANVAS CONTAINER -->
     <main class="flex-1 max-w-[1600px] w-full mx-auto p-4 space-y-4">
         
-        <!-- UPGRADED CONFIGURATION RIBBON WITH TIMEFRAME ANALYSIS -->
         <div id="dse-context-card" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-wrap justify-between items-center gap-4">
             <div class="flex items-center gap-6 flex-wrap">
                 <div>
@@ -117,7 +110,6 @@
             </div>
         </div>
 
-        <!-- MANAGER OVERRIDE BANNER -->
         <div id="manager-edit-banner" class="bg-amber-50 border border-amber-200 rounded-xl p-4 hidden">
             <div class="flex items-center gap-3 text-amber-900 text-sm">
                 <span class="text-xl">⚠️</span>
@@ -127,11 +119,10 @@
             </div>
         </div>
 
-        <!-- DATA SHEET ENTRY MATRIX -->
         <div id="panel-dse" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="bg-slate-50 px-4 py-3 border-b border-slate-200 flex justify-between items-center">
                 <span id="matrix-sheet-title" class="text-xs font-bold uppercase tracking-wider text-slate-500">Spreadsheet Matrix Input Sheet</span>
-                <span id="sync-status" class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-green-100 text-green-700">Verified</span>
+                <span id="sync-status" class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-500">Local Standard</span>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full border-collapse text-xs text-center">
@@ -156,7 +147,6 @@
                         </tr>
                     </thead>
                     <tbody id="matrix-body-inputs" class="divide-y divide-slate-200 font-medium">
-                        <!-- WALK-IN -->
                         <tr>
                             <td class="p-2.5 border border-slate-200 text-left bg-slate-50 font-bold text-slate-700">WALK-IN</td>
                             <td class="p-1 border border-slate-200"><input type="number" id="in-enq_walk" value="0" oninput="calculateMatrixFormTotals()" class="w-full bg-white border border-slate-300 rounded p-1 text-center font-bold focus:bg-blue-50 focus:border-blue-500 outline-none"></td>
@@ -169,11 +159,10 @@
                             <td class="p-1 border border-slate-200"><input type="number" id="in-ew_walk" value="0" oninput="calculateMatrixFormTotals()" class="w-full bg-white border border-slate-300 rounded p-1 text-center font-bold focus:bg-blue-50 focus:border-blue-500 outline-none"></td>
                             <td id="mtd-ew_walk" class="p-2.5 border border-slate-200 bg-slate-50 font-semibold text-slate-900">0</td>
                         </tr>
-                        <!-- TELEPHONIC -->
                         <tr>
                             <td class="p-2.5 border border-slate-200 text-left bg-slate-50 font-bold text-slate-700">TELEPHONIC</td>
                             <td class="p-1 border border-slate-200"><input type="number" id="in-enq_tel" value="0" oninput="calculateMatrixFormTotals()" class="w-full bg-white border border-slate-300 rounded p-1 text-center font-bold focus:bg-blue-50 focus:border-blue-500 outline-none"></td>
-                            <td id="mtd-enq_tel" class="p-2.5 border border-slate-200 bg-slate-50 font-semibold text-slate-990">0</td>
+                            <td id="mtd-enq_tel" class="p-2.5 border border-slate-200 bg-slate-50 font-semibold text-slate-900">0</td>
                             <td class="p-1 border border-slate-200"><input type="number" id="in-bk_tel" value="0" oninput="calculateMatrixFormTotals()" class="w-full bg-white border border-slate-300 rounded p-1 text-center font-bold focus:bg-blue-50 focus:border-blue-500 outline-none"></td>
                             <td id="mtd-bk_tel" class="p-2.5 border border-slate-200 bg-slate-50 font-semibold text-slate-900">0</td>
                             <td id="pct-conv-tel" class="p-2.5 border border-slate-200 bg-emerald-50 text-emerald-700 font-bold">0%</td>
@@ -181,7 +170,6 @@
                             <td class="p-2.5 border border-slate-200 bg-amber-50 text-amber-800 font-bold">EW %</td>
                             <td id="lbl-ew-pct" class="p-2.5 border border-slate-200 bg-amber-50 text-amber-900 font-black">0.00</td>
                         </tr>
-                        <!-- FIELD -->
                         <tr>
                             <td class="p-2.5 border border-slate-200 text-left bg-slate-50 font-bold text-slate-700">FIELD</td>
                             <td class="p-1 border border-slate-200"><input type="number" id="in-enq_fld" value="0" oninput="calculateMatrixFormTotals()" class="w-full bg-white border border-slate-300 rounded p-1 text-center font-bold focus:bg-blue-50 focus:border-blue-500 outline-none"></td>
@@ -192,7 +180,6 @@
                             <td colspan="2" class="p-2 border border-slate-200 bg-slate-100 font-bold text-slate-400 tracking-wider text-[10px]">GMA</td>
                             <td colspan="2" class="p-2 border border-slate-200 bg-slate-100 font-bold text-slate-400 tracking-wider text-[10px]">RSA</td>
                         </tr>
-                        <!-- SERVICE REF -->
                         <tr>
                             <td class="p-2.5 border border-slate-200 text-left bg-slate-50 font-bold text-slate-700">SERVICE REF</td>
                             <td class="p-1 border border-slate-200"><input type="number" id="in-enq_srv" value="0" oninput="calculateMatrixFormTotals()" class="w-full bg-white border border-slate-300 rounded p-1 text-center font-bold focus:bg-blue-50 focus:border-blue-500 outline-none"></td>
@@ -205,7 +192,6 @@
                             <td id="lbl-curr-rsa" class="p-2 border border-slate-200 bg-slate-50 text-[10px] font-bold text-slate-400">TODAY</td>
                             <td class="p-2 border border-slate-200 bg-slate-50 text-[10px] font-bold text-slate-400">PERIOD TOTAL</td>
                         </tr>
-                        <!-- ONLINE -->
                         <tr>
                             <td class="p-2.5 border border-slate-200 text-left bg-slate-50 font-bold text-slate-700">ONLINE</td>
                             <td class="p-1 border border-slate-200"><input type="number" id="in-enq_onl" value="0" oninput="calculateMatrixFormTotals()" class="w-full bg-white border border-slate-300 rounded p-1 text-center font-bold focus:bg-blue-50 focus:border-blue-500 outline-none"></td>
@@ -218,7 +204,6 @@
                             <td class="p-1 border border-slate-200"><input type="number" id="in-rsa_val" value="0" oninput="calculateMatrixFormTotals()" class="w-full bg-white border border-slate-300 rounded p-1 text-center font-bold focus:bg-blue-50 focus:border-blue-500 outline-none"></td>
                             <td id="mtd-rsa_val" class="p-2.5 border border-slate-200 bg-slate-50 font-semibold text-slate-900">0</td>
                         </tr>
-                        <!-- TOTAL BOTTOM GRID ROW -->
                         <tr class="bg-slate-100 font-black text-slate-900 text-sm">
                             <td class="p-3 border border-slate-200 text-left bg-slate-200">TOTAL</td>
                             <td id="tot-enq-tod" class="p-3 border border-slate-200">0</td>
@@ -231,7 +216,6 @@
                             <td class="p-3 border border-slate-200 bg-amber-50 text-amber-800 text-[11px] font-bold">RSA %</td>
                             <td id="lbl-rsa-pct" class="p-3 border border-slate-200 bg-amber-50 text-amber-900">0.00</td>
                         </tr>
-                        <!-- ANCILLARY SERVICES SECTION (GEAR & FINANCE) -->
                         <tr id="fin-row-h1">
                             <td colspan="6" rowspan="3" class="bg-slate-100 border border-slate-200"></td>
                             <td colspan="2" class="p-2 border border-slate-200 bg-slate-50 font-bold text-slate-400 tracking-wider text-[10px]">GEAR</td>
@@ -261,8 +245,7 @@
             </div>
         </div>
 
-        <!-- CONTROL SUITE PANEL (MANAGEMENT ENVIRONMENT) -->
-        <div id="panel-manager" class="view-panel hidden space-y-4">
+        <div id="panel-manager" class="hidden space-y-4">
             <div class="bg-white border border-slate-200 shadow-sm rounded-xl p-1.5 flex space-x-1.5 max-w-md">
                 <button id="sub-tab-perf" onclick="toggleManagerViewSubTab('perf')" class="flex-1 text-center py-2 text-xs font-bold rounded-lg bg-blue-50 text-blue-600 transition-all cursor-pointer">Performance Feeds</button>
                 <button id="sub-tab-staff" onclick="toggleManagerViewSubTab('staff')" class="flex-1 text-center py-2 text-xs font-bold rounded-lg text-slate-600 hover:bg-slate-50 transition-all cursor-pointer">Staff Directory</button>
@@ -309,18 +292,28 @@
         </div>
     </main>
 
-    <footer class="bg-white border-t border-slate-200 py-3 text-center text-[10px] font-mono text-slate-400 tracking-wider">
+    <footer class="bg-white border-t border-slate-200 py-3 text-center text-[10px] font-mono text-slate-400 tracking-wider mt-auto">
         Centralized Cloud Core Integration Module Active
     </footer>
 
     <script>
         // ==================== SUPABASE CONFIGURATION MATRIX ====================
-        // Replace these coordinates with the ones copied from your Supabase API dashboard settings tab
-        const SUPABASE_URL = "https://zgnkmqyfelgyzsuyecrr.supabase.co"; 
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpnbmttcXlmZWxneXpzdXllY3JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5MTA3ODQsImV4cCI6MjA5NjQ4Njc4NH0.mHJ2kCdMChdtwYP2rEJ1dwqPrpVJQAMph6FeMD0z9Eo";
-        
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // Put your raw Supabase API codes inside these quotes when ready to link cloud tables
+        const SUPABASE_URL = "YOUR_SUPABASE_PROJECT_URL"; 
+        const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
         const MANAGER_PASSWORD = "Manager123";
+
+        let supabase = null;
+        
+        // Safety initialization engine block to prevent unconfigured crashes
+        if (SUPABASE_URL && SUPABASE_URL.indexOf("YOUR_SUPABASE_PROJECT_URL") === -1 && typeof supabase !== 'undefined') {
+            try {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            } catch(e) {
+                console.warn("Supabase configuration format issue detected:", e);
+                supabase = null;
+            }
+        }
 
         const MATRIX_KEYS = [
             'enq_walk', 'enq_tel', 'enq_fld', 'enq_srv', 'enq_onl',
@@ -328,9 +321,9 @@
             'ret_walk', 'ew_walk', 'gma_val', 'rsa_val', 'gear_val', 'fin_val'
         ];
 
-        // IndexedDB Local Storage Architecture Strategy via Dexie (Offline Cache Safety Net)
+        // Core Offline Cache Engine Database Initialization Strategy (Dexie Store mapping)
         const localDB = new Dexie("ShowroomPerformanceDatabaseCloud");
-        localDB.version(2).stores({
+        localDB.version(3).stores({
             staff: 'id, name, email',
             records: '[dseId+date], dseId, date, syncStatus',
             system_config: 'key, value'
@@ -349,67 +342,55 @@
 
         async function triggerNetworkStatusTransition() {
             const badge = document.getElementById('network-badge');
-            if(navigator.onLine) {
+            if(!badge) return;
+
+            if(supabase && navigator.onLine) {
                 badge.className = "px-2.5 py-1 text-[11px] font-bold rounded-full bg-green-500 text-white flex items-center gap-1.5 shadow-sm";
                 badge.innerHTML = `<span class="h-1.5 w-1.5 rounded-full bg-white animate-pulse"></span> Online`;
                 await pullStaffRosterFromCloud();
                 await processOutboundSyncQueue();
             } else {
                 badge.className = "px-2.5 py-1 text-[11px] font-bold rounded-full bg-amber-600 text-white flex items-center gap-1.5 shadow-sm";
-                badge.innerHTML = `<span class="h-1.5 w-1.5 rounded-full bg-white"></span> Offline Cache`;
+                badge.innerHTML = `Local Architecture Engine`;
             }
         }
 
         async function bootstrapApplication() {
-    try {
-        const configRegister = await localDB.system_config.get('financeAllowed');
-        appState.financeAllowed = configRegister ? configRegister.value : true;
-        const checkboxEl = document.getElementById('checkbox-rule-finance');
-        if (checkboxEl) checkboxEl.checked = appState.financeAllowed;
+            try {
+                const configRegister = await localDB.system_config.get('financeAllowed');
+                appState.financeAllowed = configRegister ? configRegister.value : true;
+                const checkboxEl = document.getElementById('checkbox-rule-finance');
+                if (checkboxEl) checkboxEl.checked = appState.financeAllowed;
 
-        // Set system dates automatically to current working date
-        const localizedDateStr = new Date().toISOString().substring(0,10);
-        const targetDateEl = document.getElementById('selector-target-date');
-        const endDateEl = document.getElementById('range-end-date');
-        const startDateEl = document.getElementById('range-start-date');
+                // Configure standard initialization dates
+                const localizedDateStr = new Date().toISOString().substring(0,10);
+                if(document.getElementById('selector-target-date')) document.getElementById('selector-target-date').value = localizedDateStr;
+                if(document.getElementById('range-end-date')) document.getElementById('range-end-date').value = localizedDateStr;
+                if(document.getElementById('range-start-date')) {
+                    document.getElementById('range-start-date').value = localizedDateStr.substring(0, 8) + '01';
+                }
+            } catch (e) {
+                console.warn("Storage defaults loaded fallback context:", e);
+            }
 
-        if (targetDateEl) targetDateEl.value = localizedDateStr;
-        if (endDateEl) endDateEl.value = localizedDateStr;
-        if (startDateEl) {
-            const firstOfCurrentMonth = localizedDateStr.substring(0, 8) + '01';
-            startDateEl.value = firstOfCurrentMonth;
+            await triggerNetworkStatusTransition();
+            await populatePortalDropdowns();
+            
+            const persistentDseId = localStorage.getItem('authenticated_dse_id');
+            if (persistentDseId) {
+                appState.activeDseId = persistentDseId;
+                document.getElementById('auth-portal').classList.add('hidden');
+                await loadActiveDataRecords();
+            } else {
+                document.getElementById('auth-portal').classList.remove('hidden');
+            }
         }
-
-        // Safe Network status call
-        await triggerNetworkStatusTransition();
-    } catch (e) {
-        console.warn("Initialization notice: App engine booting with local defaults.", e);
-    }
-    
-    // Safety check: Attempt to populate dropdowns even if cloud isn't fully linked
-    try {
-        await populatePortalDropdowns();
-    } catch(e) {
-        console.error("Dropdown layout mapping deferred:", e);
-    }
-    
-    // Ensure the portal screen elements remain active and clickable
-    const persistentDseId = localStorage.getItem('authenticated_dse_id');
-    if (persistentDseId) {
-        appState.activeDseId = persistentDseId;
-        document.getElementById('auth-portal').classList.add('hidden');
-        try { await loadActiveDataRecords(); } catch(e){}
-    } else {
-        document.getElementById('auth-portal').classList.remove('hidden');
-    }
-}
 
         function toggleTimeframeInputs() {
             const mode = document.getElementById('timeframe-mode').value;
             const saveBtn = document.getElementById('submit-action-btn');
             const sheetTitle = document.getElementById('matrix-sheet-title');
             
-            // Text matrix labels for dynamic shift updating
             const lbls = {
                 enq: document.getElementById('th-enq-curr'),
                 bk: document.getElementById('th-bk-curr'),
@@ -424,16 +405,16 @@
             if (mode === 'single') {
                 document.getElementById('single-date-container').classList.remove('hidden');
                 document.getElementById('range-date-container').classList.add('hidden');
-                sheetTitle.textContent = "Spreadsheet Matrix Input Sheet";
-                if(appState.systemMode === 'DSE' || appState.isRectifying) saveBtn.classList.remove('hidden');
+                if(sheetTitle) sheetTitle.textContent = "Spreadsheet Matrix Input Sheet";
+                if(saveBtn && (appState.systemMode === 'DSE' || appState.isRectifying)) saveBtn.classList.remove('hidden');
                 
                 Object.values(lbls).forEach(l => { if(l) l.textContent = "TODAY"; });
                 enableFormInputs(true);
             } else {
                 document.getElementById('single-date-container').classList.add('hidden');
                 document.getElementById('range-date-container').classList.remove('hidden');
-                sheetTitle.textContent = "Historical Period Aggregation Viewer (Read-Only Mode)";
-                saveBtn.classList.add('hidden');
+                if(sheetTitle) sheetTitle.textContent = "Historical Period Aggregation Viewer (Read-Only Mode)";
+                if(saveBtn) saveBtn.classList.add('hidden');
                 
                 Object.values(lbls).forEach(l => { if(l) l.textContent = "RANGE AVERAGE"; });
                 enableFormInputs(false);
@@ -449,7 +430,7 @@
         }
 
         async function pullStaffRosterFromCloud() {
-            if(!navigator.onLine) return;
+            if(!supabase || !navigator.onLine) return;
             try {
                 let { data: staffData, error } = await supabase.from('staff_directory').select('*');
                 if(!error && staffData) {
@@ -458,14 +439,15 @@
                         await localDB.staff.put(member);
                     }
                 }
-            } catch(e) { console.error("Cloud synchronization mapping breakdown during handshake sync:", e); }
+            } catch(e) { console.error("Handshake cloud deferral:", e); }
         }
 
         async function populatePortalDropdowns() {
             const portalSelect = document.getElementById('portal-user-selector');
-            portalSelect.innerHTML = '';
-            const internalRoster = await localDB.staff.toArray();
+            if(!portalSelect) return;
+            portalSelect.innerHTML = '<option value="">-- Choose Assigned Consultant Profile --</option>';
             
+            const internalRoster = await localDB.staff.toArray();
             internalRoster.forEach(staff => {
                 const node = document.createElement('option');
                 node.value = staff.id;
@@ -476,7 +458,10 @@
 
         async function submitPortalAuthentication() {
             const selectedId = document.getElementById('portal-user-selector').value;
-            if(!selectedId) return;
+            if(!selectedId) {
+                alert("Please select or register a consultant user profile to continue.");
+                return;
+            }
             localStorage.setItem('authenticated_dse_id', selectedId);
             appState.activeDseId = selectedId;
             document.getElementById('auth-portal').classList.add('hidden');
@@ -485,7 +470,6 @@
         }
 
         function bypassToManagerMode() {
-            document.getElementById('auth-portal').classList.add('hidden');
             changeSystemRole('MANAGER');
         }
 
@@ -493,21 +477,30 @@
             localStorage.removeItem('authenticated_dse_id');
             appState.activeDseId = '';
             document.getElementById('auth-portal').classList.remove('hidden');
+            document.getElementById('panel-manager').classList.add('hidden');
+            document.getElementById('panel-dse').classList.remove('hidden');
+            document.getElementById('dse-context-card').classList.remove('hidden');
             populatePortalDropdowns();
+            refreshIdentityBannerView();
         }
 
         function changeSystemRole(targetRole) {
             if(targetRole === 'MANAGER') {
                 const codeChallenge = prompt("🔒 Administrative Clearance Threshold:\nEnter Admin Security PIN:");
+                if (codeChallenge === null) return;
                 if(codeChallenge !== MANAGER_PASSWORD) {
                     alert("🚫 Handshake Denied: Password mismatch.");
                     return;
                 }
+                
+                document.getElementById('auth-portal').classList.add('hidden');
                 appState.systemMode = 'MANAGER';
                 appState.isRectifying = false;
+                
                 document.getElementById('panel-dse').classList.add('hidden');
                 document.getElementById('dse-context-card').classList.add('hidden');
                 document.getElementById('panel-manager').classList.remove('hidden');
+                
                 document.getElementById('btn-view-dse').className = "px-4 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-900";
                 document.getElementById('btn-view-mgr').className = "px-4 py-1.5 text-xs font-bold rounded-lg transition-all text-blue-600 bg-white shadow-sm";
                 renderManagerDashboardViews();
@@ -526,8 +519,10 @@
                 document.getElementById('btn-view-mgr').className = "px-4 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-900";
                 
                 const commitBtn = document.getElementById('submit-action-btn');
-                commitBtn.textContent = "Submit Daily Report";
-                commitBtn.className = "bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2.5 px-6 rounded-lg transition-colors shadow-sm cursor-pointer";
+                if(commitBtn) {
+                    commitBtn.textContent = "Submit Daily Report";
+                    commitBtn.className = "bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2.5 px-6 rounded-lg transition-colors shadow-sm cursor-pointer";
+                }
                 
                 document.getElementById('timeframe-mode').value = 'single';
                 toggleTimeframeInputs();
@@ -540,14 +535,15 @@
             const targetLabelNode = document.getElementById('active-profile-lbl');
             
             if(appState.systemMode === 'MANAGER') {
-                container.innerHTML = `Mode: <span class="text-rose-600 font-bold">MANAGER_ROOT</span>`;
+                if(container) container.innerHTML = `Mode: <span class="text-rose-600 font-bold">MANAGER_ROOT</span>`;
             } else {
                 if(appState.activeDseId) {
                     const profileData = await localDB.staff.get(appState.activeDseId);
-                    container.textContent = `User: ${profileData?.name || 'Unknown'}`;
-                    if(targetLabelNode) targetLabelNode.textContent = profileData?.name || 'Unknown';
+                    const userName = profileData?.name || 'Local Consultant Account';
+                    if(container) container.textContent = `User: ${userName}`;
+                    if(targetLabelNode) targetLabelNode.textContent = userName;
                 } else {
-                    container.textContent = `User: Unauthenticated`;
+                    if(container) container.textContent = `User: Unauthenticated`;
                     if(targetLabelNode) targetLabelNode.textContent = 'None Specified';
                 }
             }
@@ -559,7 +555,7 @@
 
             if (mode === 'single') {
                 const targetDate = document.getElementById('selector-target-date').value;
-                if(navigator.onLine) {
+                if(supabase && navigator.onLine) {
                     try {
                         let { data, error } = await supabase.from('performance_records').select('*').eq('dse_id', appState.activeDseId).eq('report_date', targetDate).maybeSingle();
                         if(!error && data) {
@@ -572,14 +568,14 @@
 
                 const existingRecord = await localDB.records.get({dseId: appState.activeDseId, date: targetDate});
                 MATRIX_KEYS.forEach(k => {
-                    document.getElementById(`in-${k}`).value = existingRecord ? (existingRecord[k] || 0) : 0;
+                    const el = document.getElementById(`in-${k}`);
+                    if(el) el.value = existingRecord ? (existingRecord[k] || 0) : 0;
                 });
             } else {
-                // Read-Only range scope evaluation strategy processing loop
                 const start = document.getElementById('range-start-date').value;
                 const end = document.getElementById('range-end-date').value;
                 
-                if(navigator.onLine) {
+                if(supabase && navigator.onLine) {
                     try {
                         let { data } = await supabase.from('performance_records').select('*').eq('dse_id', appState.activeDseId).gte('report_date', start).lte('report_date', end);
                         if(data) {
@@ -589,7 +585,7 @@
                                 await localDB.records.put(item);
                             }
                         }
-                    } catch(e) { console.error(r); }
+                    } catch(e) { console.error(e); }
                 }
 
                 const rangeRecords = await localDB.records.where('dseId').equals(appState.activeDseId).filter(r => r.date >= start && r.date <= end).toArray();
@@ -597,15 +593,18 @@
                 MATRIX_KEYS.forEach(k => {
                     let totalVal = 0;
                     rangeRecords.forEach(r => totalVal += (r[k] || 0));
-                    // Seed raw inputs with interval snapshot variables
-                    document.getElementById(`in-${k}`).value = rangeRecords.length > 0 ? Math.round(totalVal / rangeRecords.length) : 0;
+                    const el = document.getElementById(`in-${k}`);
+                    if(el) el.value = rangeRecords.length > 0 ? Math.round(totalVal / rangeRecords.length) : 0;
                 });
             }
 
             const rows = ['fin-row-h1', 'fin-row-h2', 'finance-input-row', 'fin-row-f1'];
             rows.forEach(r => {
-                if(appState.financeAllowed) document.getElementById(r).classList.remove('hidden');
-                else document.getElementById(r).classList.add('hidden');
+                const el = document.getElementById(r);
+                if(el) {
+                    if(appState.financeAllowed) el.classList.remove('hidden');
+                    else el.classList.add('hidden');
+                }
             });
 
             await calculateMatrixFormTotals();
@@ -615,11 +614,13 @@
         async function calculateMatrixFormTotals() {
             if(!appState.activeDseId) return;
             const mode = document.getElementById('timeframe-mode').value;
-            const inputValOf = (key) => parseInt(document.getElementById(`in-${key}`).value) || 0;
+            const inputValOf = (key) => {
+                const el = document.getElementById(`in-${key}`);
+                return el ? (parseInt(el.value) || 0) : 0;
+            };
 
             let mtdTracker = {};
             MATRIX_KEYS.forEach(k => mtdTracker[k] = 0);
-
             let scopeRecords = [];
 
             if(mode === 'single') {
@@ -655,72 +656,75 @@
             const getPctRatio = (b, e) => e > 0 ? Math.round((b / e) * 100) + '%' : '0%';
             const getFloatRatio = (s, b) => b > 0 ? ((s / b) * 100).toFixed(2) : '0.00';
 
-            document.getElementById('pct-conv-walk').textContent = getPctRatio(netMtdVal('bk_walk'), netMtdVal('enq_walk'));
-            document.getElementById('pct-conv-tel').textContent = getPctRatio(netMtdVal('bk_tel'), netMtdVal('enq_tel'));
-            document.getElementById('pct-conv-fld').textContent = getPctRatio(netMtdVal('bk_fld'), netMtdVal('enq_fld'));
-            document.getElementById('pct-conv-srv').textContent = getPctRatio(netMtdVal('bk_srv'), netMtdVal('enq_srv'));
-            document.getElementById('pct-conv-onl').textContent = getPctRatio(netMtdVal('bk_onl'), netMtdVal('enq_onl'));
+            if(document.getElementById('pct-conv-walk')) document.getElementById('pct-conv-walk').textContent = getPctRatio(netMtdVal('bk_walk'), netMtdVal('enq_walk'));
+            if(document.getElementById('pct-conv-tel')) document.getElementById('pct-conv-tel').textContent = getPctRatio(netMtdVal('bk_tel'), netMtdVal('enq_tel'));
+            if(document.getElementById('pct-conv-fld')) document.getElementById('pct-conv-fld').textContent = getPctRatio(netMtdVal('bk_fld'), netMtdVal('enq_fld'));
+            if(document.getElementById('pct-conv-srv')) document.getElementById('pct-conv-srv').textContent = getPctRatio(netMtdVal('bk_srv'), netMtdVal('enq_srv'));
+            if(document.getElementById('pct-conv-onl')) document.getElementById('pct-conv-onl').textContent = getPctRatio(netMtdVal('bk_onl'), netMtdVal('enq_onl'));
 
             const runningDayEnqTotal = inputValOf('enq_walk') + inputValOf('enq_tel') + inputValOf('enq_fld') + inputValOf('enq_srv') + inputValOf('enq_onl');
             const runningMtdEnqTotal = netMtdVal('enq_walk') + netMtdVal('enq_tel') + netMtdVal('enq_fld') + netMtdVal('enq_srv') + netMtdVal('enq_onl');
             const runningDayBkTotal = inputValOf('bk_walk') + inputValOf('bk_tel') + inputValOf('bk_fld') + inputValOf('bk_srv') + inputValOf('bk_onl');
             const runningMtdBkTotal = netMtdVal('bk_walk') + netMtdVal('bk_tel') + netMtdVal('bk_fld') + netMtdVal('bk_srv') + netMtdVal('bk_onl');
 
-            document.getElementById('tot-enq-tod').textContent = mode === 'single' ? runningDayEnqTotal : Math.round(runningMtdEnqTotal / (scopeRecords.length || 1));
-            document.getElementById('tot-enq-mtd').textContent = runningMtdEnqTotal;
-            document.getElementById('tot-bk-tod').textContent = mode === 'single' ? runningDayBkTotal : Math.round(runningMtdBkTotal / (scopeRecords.length || 1));
-            document.getElementById('tot-bk-mtd').textContent = runningMtdBkTotal;
-            document.getElementById('lbl-conv-tot').textContent = getPctRatio(runningMtdBkTotal, runningMtdEnqTotal);
+            if(document.getElementById('tot-enq-tod')) document.getElementById('tot-enq-tod').textContent = mode === 'single' ? runningDayEnqTotal : Math.round(runningMtdEnqTotal / (scopeRecords.length || 1));
+            if(document.getElementById('tot-enq-mtd')) document.getElementById('tot-enq-mtd').textContent = runningMtdEnqTotal;
+            if(document.getElementById('tot-bk-tod')) document.getElementById('tot-bk-tod').textContent = mode === 'single' ? runningDayBkTotal : Math.round(runningMtdBkTotal / (scopeRecords.length || 1));
+            if(document.getElementById('tot-bk-mtd')) document.getElementById('tot-bk-mtd').textContent = runningMtdBkTotal;
+            if(document.getElementById('lbl-conv-tot')) document.getElementById('lbl-conv-tot').textContent = getPctRatio(runningMtdBkTotal, runningMtdEnqTotal);
 
             const mtdRetailVolume = netMtdVal('ret_walk');
-            document.getElementById('lbl-ew-pct').textContent = getFloatRatio(netMtdVal('ew_walk'), mtdRetailVolume);
-            document.getElementById('lbl-rsa-pct').textContent = getFloatRatio(netMtdVal('rsa_val'), mtdRetailVolume);
-            document.getElementById('lbl-fin-pct').textContent = getFloatRatio(netMtdVal('fin_val'), mtdRetailVolume);
+            if(document.getElementById('lbl-ew-pct')) document.getElementById('lbl-ew-pct').textContent = getFloatRatio(netMtdVal('ew_walk'), mtdRetailVolume);
+            if(document.getElementById('lbl-rsa-pct')) document.getElementById('lbl-rsa-pct').textContent = getFloatRatio(netMtdVal('rsa_val'), mtdRetailVolume);
+            if(document.getElementById('lbl-fin-pct')) document.getElementById('lbl-fin-pct').textContent = getFloatRatio(netMtdVal('fin_val'), mtdRetailVolume);
 
-            document.getElementById('lbl-gma-pba').textContent = mtdRetailVolume > 0 ? Math.round(netMtdVal('gma_val') / mtdRetailVolume) : 0;
-            document.getElementById('lbl-gear-pba').textContent = mtdRetailVolume > 0 ? Math.round(netMtdVal('gear_val') / mtdRetailVolume) : 0;
+            if(document.getElementById('lbl-gma-pba')) document.getElementById('lbl-gma-pba').textContent = mtdRetailVolume > 0 ? Math.round(netMtdVal('gma_val') / mtdRetailVolume) : 0;
+            if(document.getElementById('lbl-gear-pba')) document.getElementById('lbl-gear-pba').textContent = mtdRetailVolume > 0 ? Math.round(netMtdVal('gear_val') / mtdRetailVolume) : 0;
 
             const indicatorNode = document.getElementById('sync-status');
-            if (mode === 'single') {
-                const targetDate = document.getElementById('selector-target-date').value;
-                const syncCheck = await localDB.records.get({dseId: appState.activeDseId, date: targetDate});
-                if(syncCheck) {
-                    indicatorNode.className = syncCheck.syncStatus === 'Synced' ? "text-xs font-mono font-bold px-2 py-0.5 rounded bg-green-100 text-green-700" : "text-xs font-mono font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-700 animate-pulse";
-                    indicatorNode.textContent = syncCheck.syncStatus;
+            if(indicatorNode) {
+                if (mode === 'single') {
+                    const targetDate = document.getElementById('selector-target-date').value;
+                    const syncCheck = await localDB.records.get({dseId: appState.activeDseId, date: targetDate});
+                    if(syncCheck) {
+                        indicatorNode.className = syncCheck.syncStatus === 'Synced' ? "text-xs font-mono font-bold px-2 py-0.5 rounded bg-green-100 text-green-700" : "text-xs font-mono font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-700";
+                        indicatorNode.textContent = syncCheck.syncStatus;
+                    } else {
+                        indicatorNode.className = "text-xs font-mono font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-500";
+                        indicatorNode.textContent = "Unsaved Changes";
+                    }
                 } else {
-                    indicatorNode.className = "text-xs font-mono font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-500";
-                    indicatorNode.textContent = "Unsaved Changes";
+                    indicatorNode.className = "text-xs font-mono font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-700";
+                    indicatorNode.textContent = "Compiled Snapshot";
                 }
-            } else {
-                indicatorNode.className = "text-xs font-mono font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-700";
-                indicatorNode.textContent = "Historical Snapshot Compiled";
             }
         }
 
         async function saveActiveMatrixRecord() {
             if(!appState.activeDseId) return;
             const mode = document.getElementById('timeframe-mode').value;
-            if(mode !== 'single') return; // Blocks execution drops during range queries
+            if(mode !== 'single') return;
 
             const targetDate = document.getElementById('selector-target-date').value;
-
             let cachePayload = { dseId: appState.activeDseId, date: targetDate, syncStatus: 'Pending Sync' };
             let cloudPayload = { dse_id: appState.activeDseId, report_date: targetDate };
 
             MATRIX_KEYS.forEach(k => {
-                cachePayload[k] = parseInt(document.getElementById(`in-${k}`).value) || 0;
-                cloudPayload[k] = parseInt(document.getElementById(`in-${k}`).value) || 0;
+                const el = document.getElementById(`in-${k}`);
+                const val = el ? (parseInt(el.value) || 0) : 0;
+                cachePayload[k] = val;
+                cloudPayload[k] = val;
             });
 
             await localDB.records.put(cachePayload);
 
-            if(navigator.onLine) {
+            if(supabase && navigator.onLine) {
                 try {
                     const { error } = await supabase.from('performance_records').upsert(cloudPayload);
                     if(!error) {
                         await localDB.records.update([appState.activeDseId, targetDate], { syncStatus: 'Synced' });
                     }
-                } catch(e) { console.error("Cloud entry block rejected. Preserved safely in internal stack.", e); }
+                } catch(e) { console.error("Cloud push deferred:", e); }
             }
 
             if(appState.isRectifying) {
@@ -731,7 +735,7 @@
         }
 
         async function processOutboundSyncQueue() {
-            if(!navigator.onLine) return;
+            if(!supabase || !navigator.onLine) return;
             const backgroundQueue = await localDB.records.where('syncStatus').equals('Pending Sync').toArray();
             for(let packet of backgroundQueue) {
                 let cloudPayload = { dse_id: packet.dseId, report_date: packet.date };
@@ -747,15 +751,17 @@
         async function renderManagerDashboardViews() {
             const container = document.getElementById('manager-matrix-reports-container');
             const summaryContainer = document.getElementById('manager-final-summary-container');
-            container.innerHTML = '<div class="text-xs text-slate-400 font-mono animate-pulse">Filtering and compounding performance logs live from cloud server ledger instances...</div>';
+            if(!container || !summaryContainer) return;
+
+            container.innerHTML = '<div class="text-xs text-slate-400 font-mono animate-pulse">Processing performance vectors...</div>';
             summaryContainer.innerHTML = '';
 
             const mode = document.getElementById('timeframe-mode').value;
             let start, end;
 
+            const dayStr = document.getElementById('selector-target-date').value;
             if(mode === 'single') {
-                const dayStr = document.getElementById('selector-target-date').value;
-                start = dayStr.substring(0,8) + '01'; // Default month lower bounds tracking fallback
+                start = dayStr.substring(0,8) + '01';
                 end = dayStr;
             } else {
                 start = document.getElementById('range-start-date').value;
@@ -764,7 +770,7 @@
 
             const staffRegistry = await localDB.staff.toArray();
 
-            if(navigator.onLine) {
+            if(supabase && navigator.onLine) {
                 try {
                     let { data: allRecords } = await supabase.from('performance_records').select('*').gte('report_date', start).lte('report_date', end);
                     if(allRecords) {
@@ -778,6 +784,16 @@
             }
 
             container.innerHTML = '';
+            
+            // Build temporary offline register element if list is raw empty
+            if (staffRegistry.length === 0) {
+                container.innerHTML = `
+                    <div class="p-6 text-center text-xs border border-dashed rounded-xl text-slate-400">
+                        No active consultant profiles detected. Use the <strong>Staff Directory</strong> tab above to configure team profiles.
+                    </div>`;
+                return;
+            }
+
             let coreClusterSummary = { today: {}, withMtd: {} };
             MATRIX_KEYS.forEach(k => { coreClusterSummary.today[k] = 0; coreClusterSummary.withMtd[k] = 0; });
 
@@ -785,10 +801,8 @@
                 let currentDayMap = {};
                 let rangeTotals = {};
 
-                // Evaluate exact base variable state targeting current selected metrics
                 if(mode === 'single') {
-                    const targetDate = document.getElementById('selector-target-date').value;
-                    const actualDayLog = await localDB.records.get({dseId: employee.id, date: targetDate});
+                    const actualDayLog = await localDB.records.get({dseId: employee.id, date: dayStr});
                     MATRIX_KEYS.forEach(k => {
                         currentDayMap[k] = actualDayLog ? (actualDayLog[k] || 0) : 0;
                         coreClusterSummary.today[k] += currentDayMap[k];
@@ -808,7 +822,6 @@
                 MATRIX_KEYS.forEach(k => {
                     coreClusterSummary.withMtd[k] += rangeTotals[k];
                     if(mode === 'range') {
-                        // In absolute range evaluation frameworks, average out baseline figures
                         currentDayMap[k] = historicalLogs.length > 0 ? Math.round(rangeTotals[k] / historicalLogs.length) : 0;
                         coreClusterSummary.today[k] += currentDayMap[k];
                     }
@@ -961,7 +974,7 @@
                             <tr class="${appState.financeAllowed ? '' : 'hidden'}">
                                 <td class="p-2 border ${baseBorder}"><strong>${day.gear_val || 0}</strong></td>
                                 <td class="p-2 border ${mtdCellStyle}">${getMtd('gear_val')}</td>
-                                <td class="p-2 border ${day.fin_val || 0}"><strong>${day.fin_val || 0}</strong></td>
+                                <td class="p-2 border ${baseBorder}"><strong>${day.fin_val || 0}</strong></td>
                                 <td class="p-2 border ${mtdCellStyle}">${getMtd('fin_val')}</td>
                             </tr>
                             <tr class="${appState.financeAllowed ? '' : 'hidden'}">
@@ -990,8 +1003,10 @@
 
             document.getElementById('manager-edit-banner').classList.remove('hidden');
             const submitBtn = document.getElementById('submit-action-btn');
-            submitBtn.textContent = "🚀 Authorize Cloud Rectification Override";
-            submitBtn.className = "bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold py-2.5 px-6 rounded-lg transition-colors shadow-sm cursor-pointer";
+            if(submitBtn) {
+                submitBtn.textContent = "🚀 Authorize Cloud Rectification Override";
+                submitBtn.className = "bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold py-2.5 px-6 rounded-lg transition-colors shadow-sm cursor-pointer";
+            }
         }
 
         function toggleManagerViewSubTab(targetTab) {
@@ -1001,6 +1016,8 @@
             subTabs.forEach(t => {
                 const link = document.getElementById(`sub-tab-${t}`);
                 const view = document.getElementById(`mgr-sub-${t}`);
+                if(!link || !view) return;
+                
                 if(t === targetTab) {
                     link.className = "flex-1 text-center py-2 text-xs font-bold rounded-lg bg-blue-50 text-blue-600 transition-all";
                     view.classList.remove('hidden');
@@ -1016,6 +1033,7 @@
 
         async function syncRenderStaffDirectoryList() {
             const container = document.getElementById('manager-staff-list-container');
+            if(!container) return;
             container.innerHTML = '';
             const rosters = await localDB.staff.toArray();
 
@@ -1036,11 +1054,11 @@
         async function createNewDSEUser() {
             const nameEl = document.getElementById('add-name');
             const emailEl = document.getElementById('add-email');
-            if(!nameEl.value || !emailEl.value) return alert("Validation Failed: Enter profile name and email coordinates.");
+            if(!nameEl || !emailEl || !nameEl.value || !emailEl.value) return alert("Validation Failed: Enter profile name and email.");
 
             const generatedId = 'dse-' + Date.now();
             
-            if(navigator.onLine) {
+            if(supabase && navigator.onLine) {
                 const { error } = await supabase.from('staff_directory').insert([{ id: generatedId, name: nameEl.value, email: emailEl.value }]);
                 if(error) return alert("Database Refusal: " + error.message);
             }
@@ -1053,8 +1071,8 @@
         }
 
         async function removeConsultantProfile(id) {
-            if(confirm("Purge profile completely out of cloud records?")) {
-                if(navigator.onLine) {
+            if(confirm("Purge profile completely out of records?")) {
+                if(supabase && navigator.onLine) {
                     await supabase.from('staff_directory').delete().eq('id', id);
                 }
                 await localDB.staff.delete(id);
@@ -1075,6 +1093,7 @@
             await loadActiveDataRecords();
         }
 
+        // Initialize application sequence
         bootstrapApplication();
     </script>
 </body>
