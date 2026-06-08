@@ -361,30 +361,48 @@
         }
 
         async function bootstrapApplication() {
-            const configRegister = await localDB.system_config.get('financeAllowed');
-            appState.financeAllowed = configRegister ? configRegister.value : true;
-            document.getElementById('checkbox-rule-finance').checked = appState.financeAllowed;
+    try {
+        const configRegister = await localDB.system_config.get('financeAllowed');
+        appState.financeAllowed = configRegister ? configRegister.value : true;
+        const checkboxEl = document.getElementById('checkbox-rule-finance');
+        if (checkboxEl) checkboxEl.checked = appState.financeAllowed;
 
-            // Set system dates automatically to current working date
-            const localizedDateStr = new Date().toISOString().substring(0,10);
-            document.getElementById('selector-target-date').value = localizedDateStr;
-            document.getElementById('range-end-date').value = localizedDateStr;
-            
+        // Set system dates automatically to current working date
+        const localizedDateStr = new Date().toISOString().substring(0,10);
+        const targetDateEl = document.getElementById('selector-target-date');
+        const endDateEl = document.getElementById('range-end-date');
+        const startDateEl = document.getElementById('range-start-date');
+
+        if (targetDateEl) targetDateEl.value = localizedDateStr;
+        if (endDateEl) endDateEl.value = localizedDateStr;
+        if (startDateEl) {
             const firstOfCurrentMonth = localizedDateStr.substring(0, 8) + '01';
-            document.getElementById('range-start-date').value = firstOfCurrentMonth;
-
-            await triggerNetworkStatusTransition();
-            await populatePortalDropdowns();
-            
-            const persistentDseId = localStorage.getItem('authenticated_dse_id');
-            if (persistentDseId) {
-                appState.activeDseId = persistentDseId;
-                document.getElementById('auth-portal').classList.add('hidden');
-                await loadActiveDataRecords();
-            } else {
-                document.getElementById('auth-portal').classList.remove('hidden');
-            }
+            startDateEl.value = firstOfCurrentMonth;
         }
+
+        // Safe Network status call
+        await triggerNetworkStatusTransition();
+    } catch (e) {
+        console.warn("Initialization notice: App engine booting with local defaults.", e);
+    }
+    
+    // Safety check: Attempt to populate dropdowns even if cloud isn't fully linked
+    try {
+        await populatePortalDropdowns();
+    } catch(e) {
+        console.error("Dropdown layout mapping deferred:", e);
+    }
+    
+    // Ensure the portal screen elements remain active and clickable
+    const persistentDseId = localStorage.getItem('authenticated_dse_id');
+    if (persistentDseId) {
+        appState.activeDseId = persistentDseId;
+        document.getElementById('auth-portal').classList.add('hidden');
+        try { await loadActiveDataRecords(); } catch(e){}
+    } else {
+        document.getElementById('auth-portal').classList.remove('hidden');
+    }
+}
 
         function toggleTimeframeInputs() {
             const mode = document.getElementById('timeframe-mode').value;
