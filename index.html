@@ -3,142 +3,172 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DSE Performance Tracker & Manager Panel</title>
-    <!-- Supabase CDN Client Library Module Injection -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>DSE Live Performance Tracker & Manager Panel</title>
     <style>
         * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
-        body { background-color: #f3f4f6; color: #1f2937; margin: 0; padding: 20px; }
-        .container { max-width: 1400px; margin: 0 auto; }
+        body { background-color: #f3f4f6; color: #1f2937; margin: 0; padding: 0; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
         
-        /* Login Auth Mask */
-        .auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #111827; display: flex; justify-content: center; align-items: center; z-index: 9999; }
-        .auth-card { background: white; padding: 32px; border-radius: 12px; width: 100%; max-width: 400px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3); }
-        .auth-card h2 { margin-top: 0; color: #111827; margin-bottom: 6px; font-size: 1.5rem; }
-        .auth-card p { margin: 0 0 24px 0; font-size: 0.85rem; color: #6b7280; }
-        
-        /* Header Configuration */
+        /* Auth Screen Design */
+        .auth-wrapper { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #0f172a; padding: 20px; }
+        .auth-card { background: white; padding: 32px; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3); width: 100%; max-width: 400px; }
+        .auth-header { text-align: center; margin-bottom: 24px; }
+        .auth-logo { background: #2563eb; color: white; display: inline-block; padding: 8px 16px; border-radius: 8px; font-weight: bold; font-size: 1.5rem; margin-bottom: 12px; }
+        .auth-title { font-size: 1.25rem; font-weight: 700; color: #1e293b; margin: 0; }
+        .auth-subtitle { font-size: 0.85rem; color: #64748b; margin: 4px 0 0 0; }
+        .form-group { margin-bottom: 16px; }
+        .auth-input { width: 100%; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 8px; font-size: 0.9rem; outline: none; transition: border 0.2s; }
+        .auth-input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.15); }
+        .auth-btn { width: 100%; background: #2563eb; color: white; border: none; padding: 12px; font-size: 0.9rem; font-weight: 600; border-radius: 8px; cursor: pointer; margin-top: 8px; }
+        .auth-btn:hover { background: #1d4ed8; }
+        .auth-error { color: #dc2626; font-size: 0.8rem; font-weight: 500; margin-top: 8px; text-align: center; display: none; }
+
+        /* Header & Navigation Styling */
         header { background: white; padding: 16px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 20px; }
         .logo-group { display: flex; align-items: center; gap: 12px; }
         .logo { background: #2563eb; color: white; padding: 8px 14px; border-radius: 8px; font-weight: bold; font-size: 1.2rem; }
         .title h1 { margin: 0; font-size: 1.3rem; color: #111827; }
         .title p { margin: 2px 0 0 0; font-size: 0.75rem; color: #6b7280; }
         
-        /* Panels, Cards & Layout Engines */
+        /* Interactive Switches */
+        .controls { display: flex; align-items: center; gap: 16px; }
+        .role-selector { background: #e5e7eb; padding: 4px; border-radius: 8px; display: flex; gap: 4px; }
+        .role-btn { border: none; padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600; color: #4b5563; background: transparent; transition: all 0.2s; }
+        .role-btn.active { background: white; color: #2563eb; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .logout-link { font-size: 0.85rem; color: #dc2626; font-weight: 600; text-decoration: none; cursor: pointer; margin-left: 12px; }
+        
+        /* UI Panels & Cards */
         .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; margin-bottom: 20px; }
         .flex-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
         .inputs-group { display: flex; gap: 16px; align-items: center; }
         
         label { display: block; font-size: 0.75rem; font-weight: 700; color: #4b5563; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.05em; }
         select, input[type="date"], input[type="text"], input[type="email"] { border: 1px solid #d1d5db; padding: 8px 12px; border-radius: 6px; font-size: 0.875rem; outline: none; background: white; min-width: 160px; font-weight: 500; }
+        select:focus, input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.15); }
         
+        /* Standard Action Buttons */
         .btn { background: #2563eb; color: white; border: none; padding: 10px 20px; font-size: 0.875rem; font-weight: 600; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
         .btn:hover { background: #1d4ed8; }
         .btn-success { background: #16a34a; }
+        .btn-success:hover { background: #15803d; }
         .btn-danger { background: none; border: 1px solid #fca5a5; color: #dc2626; padding: 6px 12px; font-size: 0.75rem; font-weight: 600; border-radius: 6px; cursor: pointer; }
         .btn-danger:hover { background: #fef2f2; }
         
-        .banner { padding: 12px 16px; border-radius: 8px; font-size: 0.875rem; font-weight: 500; margin-bottom: 16px; border: 1px solid transparent; }
+        /* Notification Banners */
+        .banner { padding: 12px 16px; border-radius: 8px; font-size: 0.875rem; font-weight: 500; margin-bottom: 16px; border: 1px solid transparent; display: flex; justify-content: space-between; align-items: center; }
         .banner-warning { background-color: #fffbeb; border-color: #fde68a; color: #78350f; }
 
-        /* Spreadsheet Tables */
-        .table-container { width: 100%; overflow-x: auto; background: white; border-radius: 12px; border: 1px solid #e5e7eb; margin-bottom: 24px; }
+        /* Spreadsheet Grid */
+        .table-container { width: 100%; overflow-x: auto; background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; margin-bottom: 24px; }
         table { width: 100%; border-collapse: collapse; text-align: left; min-width: 1000px; font-size: 0.875rem; }
         th { background: #1f2937; color: white; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; padding: 10px 6px; text-align: center; border: 1px solid #374151; }
-        th.sub-head { background: #4b5563; font-size: 0.7rem; }
+        th.sub-head { background: #4b5563; border-color: #4b5563; font-size: 0.7rem; }
         td { padding: 6px; border: 1px solid #e5e7eb; font-weight: 500; text-align: center; }
+        
         td.row-label { background: #f9fafb; font-weight: 700; color: #374151; text-align: left; padding-left: 14px; width: 160px; }
         td.mtd-cell { background: #f9fafb; font-weight: 600; color: #111827; }
         td.pct-cell { background: #f0fdf4; font-weight: 700; color: #15803d; }
         td.blocked-cell { background: #9ca3af; }
-        td.highlight-lbl { background: #fef08a; color: #713f12; font-size: 0.75rem; font-weight: 700; }
+        td.highlight-lbl { background: #fef08a; color: #713f12; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
         td.highlight-val { background: #fef08a; color: #713f12; font-weight: 700; }
         
-        table input[type="number"] { width: 80px; padding: 6px; border: 1px solid #d1d5db; text-align: center; font-size: 0.875rem; font-weight: 600; border-radius: 4px; }
-        tr.total-row td { background: #e5e7eb; font-weight: 700; color: #111827; border-top: 2px solid #6b7280; }
+        table input[type="number"] { width: 100%; padding: 6px; border: 1px solid #d1d5db; text-align: center; font-size: 0.875rem; font-weight: 600; background: #fff; border-radius: 4px; outline: none; }
+        table input[type="number"]:focus { border-color: #2563eb; background: #eff6ff; }
+        table input::-webkit-outer-spin-button, table input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        
+        tr.total-row td { background: #e5e7eb; font-weight: 700; color: #111827; border-top: 2px solid #6b7280; padding: 10px 6px; }
+        tr.total-row td.total-pct { background: #fef9c3; color: #1e3a8a; font-size: 0.95rem; }
 
-        .dse-report-block { background: white; padding: 20px; border-radius: 12px; border: 1px solid #d1d5db; margin-bottom: 30px; }
+        /* Manager Specific Blocks */
+        .dse-report-block { background: white; padding: 20px; border-radius: 12px; border: 1px solid #d1d5db; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-bottom: 30px; }
         .dse-report-header { display: flex; justify-content: space-between; align-items: center; background: #f3f4f6; padding: 12px 20px; margin: -20px -20px 20px -20px; border-top-left-radius: 11px; border-top-right-radius: 11px; border-bottom: 1px solid #e5e7eb; }
         .summary-block { border: 2px dashed #2563eb; background: #f8fafc; }
-        .summary-block .dse-report-header { background: #e0f2fe; }
+        .summary-block .dse-report-header { background: #e0f2fe; border-bottom: 1px solid #bae6fd; }
 
+        /* Layouts */
         .tabs { display: flex; gap: 16px; border-bottom: 2px solid #e5e7eb; margin-bottom: 20px; }
         .tab-btn { background: none; border: none; padding: 12px 6px; font-size: 0.875rem; font-weight: 600; color: #6b7280; cursor: pointer; border-bottom: 2px solid transparent; }
         .tab-btn.active { color: #2563eb; border-color: #2563eb; }
         .grid-split { display: grid; grid-template-columns: 1fr; gap: 20px; }
         @media (min-width: 768px) { .grid-split { grid-template-columns: 1fr 2fr; } }
         .directory-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #e5e7eb; }
-        
+
         .hidden { display: none !important; }
-        .manager-indicator { font-size: 0.75rem; font-weight: 700; background: #dc2626; color: white; padding: 2px 8px; border-radius: 4px; margin-left: 8px; text-transform: uppercase; }
-        .demo-badge { background: #f59e0b; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
+        .manager-indicator { font-size: 0.75rem; font-weight: 700; background: #dc2626; color: white; padding: 2px 8px; border-radius: 4px; margin-left: 8px; text-transform: uppercase; vertical-align: middle; }
     </style>
 </head>
 <body>
 
-    <!-- AUTHENTICATION CONTAINER WINDOW -->
-    <div id="auth-screen" class="auth-overlay">
+    <div id="panel-auth" class="auth-wrapper">
         <div class="auth-card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <h2>Portal Authentication</h2>
-                <span class="demo-badge" id="mode-badge">Local Mode</span>
+            <div class="auth-header">
+                <div class="auth-logo">DSE</div>
+                <h2 class="auth-title">System Authentication</h2>
+                <p class="auth-subtitle">Performance Control Architecture Login</p>
             </div>
-            <p>Please log in using an employee email address.</p>
-            <div style="margin-bottom: 16px;">
-                <label>Corporate Email</label>
-                <input type="email" id="auth-email-input" placeholder="aniket@dealership.com" style="width: 100%;">
-                <div style="margin-top: 10px; font-size: 0.75rem; color: #6b7280; background: #f3f4f6; padding: 8px; border-radius: 6px;">
-                    <strong>Demo Logins:</strong><br>
-                    • DSE: aniket@dealership.com<br>
-                    • Manager: manager@dealership.com
-                </div>
+            <div class="form-group">
+                <label>Security Access Role</label>
+                <select id="auth-role" style="width: 100%; min-width: 100%; height: 42px;" onchange="toggleAuthFields(this.value)">
+                    <option value="DSE">Digital Sales Executive (DSE)</option>
+                    <option value="MANAGER">Showroom Manager</option>
+                </select>
             </div>
-            <button class="btn" style="width: 100%; justify-content: center;" onclick="attemptPortalLogin()">Verify & Enter Platform</button>
+            <div id="auth-group-dse" class="form-group">
+                <label>Identify Active Profile</label>
+                <select id="auth-dse-identity" style="width: 100%; min-width: 100%; height: 42px;"></select>
+            </div>
+            <div id="auth-group-pass" class="form-group hidden">
+                <label>Manager Security PIN</label>
+                <input type="password" id="auth-password" class="auth-input" placeholder="••••••••">
+            </div>
+            <button class="auth-btn" onclick="processSystemAuthentication()">Access Workspace</button>
+            <div id="auth-error-msg" class="auth-error">Invalid administrative security verification.</div>
         </div>
     </div>
 
-    <!-- MAIN PLATFORM INTERFACE -->
-    <div class="container">
+    <div id="panel-workspace" class="container hidden">
+        
         <header>
             <div class="logo-group">
                 <div class="logo">DSE</div>
                 <div class="title">
                     <h1>Performance Matrix Control System</h1>
-                    <p id="sync-status">Connected to Active Infrastructure</p>
+                    <p>Live Database Synchronized Enterprise Core</p>
                 </div>
             </div>
             <div class="controls">
                 <div>
-                    <span id="display-user-identity" style="font-size:0.875rem; font-weight:600;">Loading identity profile...</span>
+                    <span id="display-user-identity" style="font-size:0.875rem; font-weight:600;">DSE Profile: Loading...</span>
+                    <a class="logout-link" onclick="terminateSession()">Exit Session</a>
                 </div>
-                <button class="btn-danger" style="margin-left: 12px;" onclick="logUserOut()">Log Out</button>
             </div>
         </header>
 
-        <!-- DATA ENTRY VIEW PANEL (DSE ROLE) -->
-        <div id="panel-dse" class="view-panel hidden">
+        <div id="panel-dse" class="view-panel">
+            
             <div class="card flex-bar">
                 <div class="inputs-group">
-                    <div>
-                        <label>Active Employee Input Profile</label>
-                        <select id="selector-active-dse" onchange="fetchDataRecordsForActiveContext()"></select>
+                    <div id="wrapper-dse-dropdown" class="hidden">
+                        <label>Active Target Employee Profile</label>
+                        <select id="selector-active-dse" onchange="loadActiveDataRecords()"></select>
                     </div>
                     <div>
                         <label>Reporting Target Date</label>
-                        <input type="date" id="selector-target-date" onchange="fetchDataRecordsForActiveContext()">
+                        <input type="date" id="selector-target-date" value="2026-06-09" onchange="loadActiveDataRecords()">
                     </div>
                 </div>
                 <div>
-                    <button id="submit-action-btn" class="btn" onclick="saveActiveMatrixData()">Submit Daily Report</button>
-                    <button id="mgr-back-btn" class="btn btn-danger hidden" style="background:#4b5563; border:none; color:white; padding:10px 20px;" onclick="configurePlatformForManagerView()">← Back to Dashboard</button>
+                    <button id="submit-action-btn" class="btn" onclick="saveActiveMatrixRecord()">Submit Daily Report</button>
                 </div>
             </div>
 
             <div id="manager-edit-banner" class="banner banner-warning hidden">
-                <strong>🔒 MANAGER OVERRIDE RECTIFICATION MODE:</strong> Altering historical data logs directly. Saving will rewrite indices for the active date.
+                <div>
+                    <strong>🔒 MANAGER RECTIFICATION MODE:</strong> You are directly modifying historical backend records. Saving here overrides data safely across the live DB layout.
+                </div>
+                <button class="btn" style="padding: 4px 12px; font-size: 0.75rem;" onclick="exitRectificationMode()">Return to Manager View</button>
             </div>
 
-            <!-- THE SPREADSHEET ELEMENT -->
             <div class="table-container">
                 <table>
                     <thead>
@@ -164,21 +194,21 @@
                     <tbody id="matrix-body-inputs">
                         <tr>
                             <td class="row-label">WALK-IN</td>
-                            <td><input type="number" id="in-enq_walk" value="0" min="0" oninput="calculateMatrixFormTotals()"></td>
+                            <td><input type="number" id="in-enq_walk" value="0" oninput="calculateMatrixFormTotals()"></td>
                             <td class="mtd-cell" id="mtd-enq_walk">0</td>
-                            <td><input type="number" id="in-bk_walk" value="0" min="0" oninput="calculateMatrixFormTotals()"></td>
+                            <td><input type="number" id="in-bk_walk" value="0" oninput="calculateMatrixFormTotals()"></td>
                             <td class="mtd-cell" id="mtd-bk_walk">0</td>
                             <td class="pct-cell" id="pct-conv-walk">0%</td>
-                            <td><input type="number" id="in-ret_walk" value="0" min="0" oninput="calculateMatrixFormTotals()"></td>
+                            <td><input type="number" id="in-ret_walk" value="0" oninput="calculateMatrixFormTotals()"></td>
                             <td class="mtd-cell" id="mtd-ret_walk">0</td>
-                            <td><input type="number" id="in-ew_walk" value="0" min="0" oninput="calculateMatrixFormTotals()"></td>
+                            <td><input type="number" id="in-ew_walk" value="0" oninput="calculateMatrixFormTotals()"></td>
                             <td class="mtd-cell" id="mtd-ew_walk">0</td>
                         </tr>
                         <tr>
                             <td class="row-label">TELEPHONIC</td>
-                            <td><input type="number" id="in-enq_tel" value="0" min="0" oninput="calculateMatrixFormTotals()"></td>
+                            <td><input type="number" id="in-enq_tel" value="0" oninput="calculateMatrixFormTotals()"></td>
                             <td class="mtd-cell" id="mtd-enq_tel">0</td>
-                            <td><input type="number" id="in-bk_tel" value="0" min="0" oninput="calculateMatrixFormTotals()"></td>
+                            <td><input type="number" id="in-bk_tel" value="0" oninput="calculateMatrixFormTotals()"></td>
                             <td class="mtd-cell" id="mtd-bk_tel">0</td>
                             <td class="pct-cell" id="pct-conv-tel">0%</td>
                             <td colspan="2" class="blocked-cell"></td>
@@ -187,9 +217,9 @@
                         </tr>
                         <tr>
                             <td class="row-label">FIELD</td>
-                            <td><input type="number" id="in-enq_fld" value="0" min="0" oninput="calculateMatrixFormTotals()"></td>
+                            <td><input type="number" id="in-enq_fld" value="0" oninput="calculateMatrixFormTotals()"></td>
                             <td class="mtd-cell" id="mtd-enq_fld">0</td>
-                            <td><input type="number" id="in-bk_fld" value="0" min="0" oninput="calculateMatrixFormTotals()"></td>
+                            <td><input type="number" id="in-bk_fld" value="0" oninput="calculateMatrixFormTotals()"></td>
                             <td class="mtd-cell" id="mtd-bk_fld">0</td>
                             <td class="pct-cell" id="pct-conv-fld">0%</td>
                             <td colspan="2" style="background:#f3f4f6; font-size:0.75rem; font-weight:700; color:#6b7280;">GMA</td>
@@ -197,26 +227,26 @@
                         </tr>
                         <tr>
                             <td class="row-label">SERVICE REF</td>
-                            <td><input type="number" id="in-enq_srv" value="0" min="0" oninput="calculateMatrixFormTotals()"></td>
+                            <td><input type="number" id="in-enq_srv" value="0" oninput="calculateMatrixFormTotals()"></td>
                             <td class="mtd-cell" id="mtd-enq_srv">0</td>
-                            <td><input type="number" id="in-bk_srv" value="0" min="0" oninput="calculateMatrixFormTotals()"></td>
+                            <td><input type="number" id="in-bk_srv" value="0" oninput="calculateMatrixFormTotals()"></td>
                             <td class="mtd-cell" id="mtd-bk_srv">0</td>
                             <td class="pct-cell" id="pct-conv-srv">0%</td>
-                            <td class="mtd-cell" style="font-size:0.7rem; color:#9ca3af;">TODAY</td>
-                            <td class="mtd-cell" style="font-size:0.7rem; color:#9ca3af;">MONTH</td>
-                            <td class="mtd-cell" style="font-size:0.7rem; color:#9ca3af;">TODAY</td>
-                            <td class="mtd-cell" style="font-size:0.7rem; color:#9ca3af;">MONTH</td>
+                            <td class="mtd-cell" style="font-size: 0.7rem; color:#9ca3af;">TODAY</td>
+                            <td class="mtd-cell" style="font-size: 0.7rem; color:#9ca3af;">MONTH</td>
+                            <td class="mtd-cell" style="font-size: 0.7rem; color:#9ca3af;">TODAY</td>
+                            <td class="mtd-cell" style="font-size: 0.7rem; color:#9ca3af;">MONTH</td>
                         </tr>
                         <tr>
                             <td class="row-label">ONLINE</td>
-                            <td><input type="number" id="in-enq_onl" value="0" min="0" oninput="calculateMatrixFormTotals()"></td>
+                            <td><input type="number" id="in-enq_onl" value="0" oninput="calculateMatrixFormTotals()"></td>
                             <td class="mtd-cell" id="mtd-enq_onl">0</td>
-                            <td><input type="number" id="in-bk_onl" value="0" min="0" oninput="calculateMatrixFormTotals()"></td>
+                            <td><input type="number" id="in-bk_onl" value="0" oninput="calculateMatrixFormTotals()"></td>
                             <td class="mtd-cell" id="mtd-bk_onl">0</td>
                             <td class="pct-cell" id="pct-conv-onl">0%</td>
-                            <td><input type="number" id="in-gma_val" value="0" min="0" oninput="calculateMatrixFormTotals()"></td>
+                            <td><input type="number" id="in-gma_val" value="0" oninput="calculateMatrixFormTotals()"></td>
                             <td class="mtd-cell" id="mtd-gma_val">0</td>
-                            <td><input type="number" id="in-rsa_val" value="0" min="0" oninput="calculateMatrixFormTotals()"></td>
+                            <td><input type="number" id="in-rsa_val" value="0" oninput="calculateMatrixFormTotals()"></td>
                             <td class="mtd-cell" id="mtd-rsa_val">0</td>
                         </tr>
                         <tr class="total-row">
@@ -225,30 +255,30 @@
                             <td id="tot-enq-mtd">0</td>
                             <td id="tot-bk-tod">0</td>
                             <td id="tot-bk-mtd">0</td>
-                            <td style="background:#fef9c3; color:#1e3a8a;" id="lbl-conv-tot">0%</td>
+                            <td class="total-pct" id="lbl-conv-tot">0%</td>
                             <td class="highlight-lbl">GMA PBA</td>
                             <td class="highlight-val" id="lbl-gma-pba">0</td>
                             <td class="highlight-lbl">RSA %</td>
                             <td class="highlight-val" id="lbl-rsa-pct">0.0%</td>
                         </tr>
-                        <tr id="finance-head-row">
+                        <tr class="finance-block">
                             <td colspan="6" rowspan="3" style="background:#e5e7eb;"></td>
                             <td colspan="2" style="background:#f3f4f6; font-size:0.75rem; font-weight:700; color:#6b7280;">GEAR</td>
                             <td colspan="2" style="background:#f3f4f6; font-size:0.75rem; font-weight:700; color:#6b7280;">IN HOUSE FINANCE</td>
                         </tr>
-                        <tr id="finance-lbl-row">
+                        <tr class="finance-block">
                             <td class="mtd-cell" style="font-size: 0.7rem; color:#9ca3af;">TODAY</td>
                             <td class="mtd-cell" style="font-size: 0.7rem; color:#9ca3af;">MONTH</td>
                             <td class="mtd-cell" style="font-size: 0.7rem; color:#9ca3af;">TODAY</td>
                             <td class="mtd-cell" style="font-size: 0.7rem; color:#9ca3af;">MONTH</td>
                         </tr>
-                        <tr id="finance-input-row">
-                            <td><input type="number" id="in-gear_val" value="0" min="0" oninput="calculateMatrixFormTotals()"></td>
+                        <tr id="finance-input-row" class="finance-block">
+                            <td><input type="number" id="in-gear_val" value="0" oninput="calculateMatrixFormTotals()"></td>
                             <td class="mtd-cell" id="mtd-gear_val">0</td>
-                            <td><input type="number" id="in-fin_val" value="0" min="0" oninput="calculateMatrixFormTotals()"></td>
+                            <td><input type="number" id="in-fin_val" value="0" oninput="calculateMatrixFormTotals()"></td>
                             <td class="mtd-cell" id="mtd-fin_val">0</td>
                         </tr>
-                        <tr id="finance-pct-row">
+                        <tr class="finance-block">
                             <td colspan="6" style="background:#e5e7eb; border-top:1px solid #e5e7eb;"></td>
                             <td class="highlight-lbl">GEAR PBA</td>
                             <td class="highlight-val" id="lbl-gear-pba">0</td>
@@ -260,32 +290,34 @@
             </div>
         </div>
 
-        <!-- COMMAND CONTROL DASHBOARD PANEL (MANAGER ROLE) -->
         <div id="panel-manager" class="view-panel hidden">
             <div class="tabs">
-                <button class="tab-btn active" id="tab-link-perf" onclick="shiftManagerActiveTab('perf')">Team Performance Dashboard</button>
-                <button class="tab-btn" id="tab-link-staff" onclick="shiftManagerActiveTab('staff')">Manage Staff Directory</button>
+                <button class="tab-btn active" id="tab-link-perf" onclick="toggleManagerTabs('perf')">Team Performance Dashboard</button>
+                <button class="tab-btn" id="tab-link-staff" onclick="toggleManagerTabs('staff')">Manage Staff Directory</button>
+                <button class="tab-btn" id="tab-link-rules" onclick="toggleManagerTabs('rules')">Visibility Policies</button>
             </div>
 
             <div id="view-sub-perf" class="sub-panel">
-                <div class="card flex-bar">
+                <div class="card flex-bar" style="margin-bottom: 24px;">
                     <div>
-                        <h3 style="margin:0; font-size:1.1rem;">Live Cumulative Operational Matrix</h3>
-                        <p style="margin:4px 0 0 0; font-size:0.8rem; color:#6b7280;">Aggregated database records across all showroom channels.</p>
+                        <h3 style="margin:0; font-size:1.1rem;">DSE-Wise Comprehensive Matrix View</h3>
+                        <p style="margin:4px 0 0 0; font-size:0.8rem; color:#6b7280;">Displays complete operational metrics per consultant along with a cumulative total map.</p>
                     </div>
                     <div>
-                        <label>Filter Dashboard Date</label>
-                        <input type="date" id="manager-dashboard-date" onchange="syncManagerDashboardData()">
+                        <label>Viewing Target Date</label>
+                        <input type="date" id="manager-date-view" value="2026-06-09" onchange="renderManagerDashboardMetrics()">
                     </div>
                 </div>
+                
                 <div id="manager-final-summary-container"></div>
+                
                 <div id="manager-matrix-reports-container"></div>
             </div>
 
             <div id="view-sub-staff" class="sub-panel hidden">
                 <div class="grid-split">
                     <div class="card">
-                        <h3 style="margin-top:0; font-size:1rem;">Add New DSE Account</h3>
+                        <h3 style="margin-top:0; font-size:1rem; border-bottom:1px solid #f3f4f6; padding-bottom:8px;">Add New DSE Account</h3>
                         <div style="margin-bottom:12px;">
                             <label>Full Name</label>
                             <input type="text" id="add-name" placeholder="John Doe" style="width:100%;">
@@ -294,179 +326,203 @@
                             <label>Email Address</label>
                             <input type="email" id="add-email" placeholder="john@dealership.com" style="width:100%;">
                         </div>
-                        <button class="btn btn-success" style="width:100%;" onclick="createNewDSEUserAccount()">Register Staff Member</button>
+                        <button class="btn btn-success" style="width:100%;" onclick="createNewDSEUser()">Register Staff Member</button>
                     </div>
                     <div class="card">
-                        <h3 style="margin-top:0; font-size:1rem;">Active Sales Rosters</h3>
+                        <h3 style="margin-top:0; font-size:1rem; border-bottom:1px solid #f3f4f6; padding-bottom:8px;">Active Sales Rosters</h3>
                         <div id="manager-staff-list-container"></div>
                     </div>
                 </div>
             </div>
+
+            <div id="view-sub-rules" class="sub-panel hidden" style="max-width:650px;">
+                <div class="card">
+                    <h3 style="margin-top:0; font-size:1rem;">DSE Security Mapping Parameters</h3>
+                    <p style="font-size:0.75rem; color:#6b7280; margin-bottom:16px;">Control what information is available to DSE staff members.</p>
+                    <div style="padding:14px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; display:flex; gap:12px; align-items:flex-start;">
+                        <input type="checkbox" id="checkbox-rule-finance" onchange="modifyFinanceAccessRule(this.checked)" style="width:16px; height:16px; margin-top:3px;">
+                        <div>
+                            <span style="display:block; font-weight:700; font-size:0.85rem;">Expose Access to In-House Finance & Gear Metrics</span>
+                            <span style="display:block; font-size:0.75rem; color:#6b7280; margin-top:2px;">When unselected, financial row blocks are completely blocked from standard DSE input views.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
+
     </div>
 
     <script>
-        // ==========================================
-        //  SUPABASE CONNECTION MANAGEMENT CONFIG
-        // ==========================================
-        const CONFIG = {
-            supabaseUrl: "https://zgnkmqyfelgyzsuyecrr.supabase.com",       // Paste your URL here: e.g. "https://xyz.supabase.co"
-            supabaseAnonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpnbmttcXlmZWxneXpzdXllY3JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5MTA3ODQsImV4cCI6MjA5NjQ4Njc4NH0.mHJ2kCdMChdtwYP2rEJ1dwqPrpVJQAMph6FeMD0z9Eo"    // Paste your Anon API Key here
-        };
-
-        let _supabase = null;
-        let isUsingSupabase = false;
-
-        // Fallback local datasets if Supabase credentials are empty strings
-        let fallbackProfiles = [
-            { id: 'dse-1', name: 'Aniket Sharma', email: 'aniket@dealership.com', role: 'DSE' },
-            { id: 'dse-2', name: 'Rajesh Patel', email: 'rajesh@dealership.com', role: 'DSE' },
-            { id: 'dse-3', name: 'Priya Mehta', email: 'priya@dealership.com', role: 'DSE' },
-            { id: 'mgr-1', name: 'Showroom Manager', email: 'manager@dealership.com', role: 'MANAGER' }
-        ];
-        let fallbackRecords = [];
-
         const MATRIX_KEYS = ['enq_walk', 'enq_tel', 'enq_fld', 'enq_srv', 'enq_onl', 'bk_walk', 'bk_tel', 'bk_fld', 'bk_srv', 'bk_onl', 'ret_walk', 'ew_walk', 'gma_val', 'rsa_val', 'gear_val', 'fin_val'];
 
-        let currentUser = null; 
-        let globalStaffList = [];
-        let globalHistoricalRecords = []; 
+        // Core App Memory Cache State
+        let sessionState = { mode: 'AUTH', userId: '', userName: '' };
+        let cachedStaff = [];
+        let cachedMTDBase = {}; // Baseline cumulative month stats before target day changes
+        let uiFinanceAllowed = true;
 
-        // Initialize App Connection State
-        window.addEventListener('DOMContentLoaded', () => {
-            const todayStr = new Date().toISOString().substring(0, 10);
-            document.getElementById('selector-target-date').value = todayStr;
-            document.getElementById('manager-dashboard-date').value = todayStr;
-
-            if (CONFIG.supabaseUrl && CONFIG.supabaseAnonKey) {
-                try {
-                    _supabase = supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseAnonKey);
-                    isUsingSupabase = true;
-                    document.getElementById('mode-badge').textContent = "Supabase Live";
-                    document.getElementById('mode-badge').style.background = "#16a34a";
-                    document.getElementById('sync-status').textContent = "Production Pipeline Sync Enabled";
-                } catch (e) {
-                    console.error("Supabase Initialization error, falling back to storage engine.", e);
+        async function apiRequest(endpoint, options = {}) {
+            try {
+                // Ensure correct header payload definitions 
+                if (options.body && typeof options.body === 'object') {
+                    options.body = JSON.stringify(options.body);
+                    options.headers = { ...options.headers, 'Content-Type': 'application/json' };
                 }
+                const response = await fetch(`/api${endpoint}`, options);
+                if (!response.ok) throw new Error(`HTTP Error Status: ${response.status}`);
+                return await response.json();
+            } catch (err) {
+                console.error("API Engine sync anomaly:", err);
+                // Graceful fallback simulation can be attached here during development stages.
+                return { success: false, error: err.message };
             }
-        });
+        }
 
-        async function attemptPortalLogin() {
-            const emailInput = document.getElementById('auth-email-input').value.trim().toLowerCase();
-            if(!emailInput) return alert("Please present a valid email address profile parameter.");
+        async function initAppEngine() {
+            // Fetch initial baseline setups from the live database infrastructure
+            const staffRes = await apiRequest('/staff');
+            cachedStaff = staffRes.success ? staffRes.data : [];
+            
+            const ruleRes = await apiRequest('/rules/finance');
+            uiFinanceAllowed = ruleRes.success ? ruleRes.allowed : true;
+            document.getElementById('checkbox-rule-finance').checked = uiFinanceAllowed;
 
-            if (isUsingSupabase) {
-                try {
-                    const { data, error } = await _supabase
-                        .from('staff_profiles')
-                        .select('*')
-                        .eq('email', emailInput)
-                        .maybeSingle();
+            repopulateDseDropdownSelectors();
+            toggleAuthFields('DSE');
+        }
 
-                    if (error) throw error;
-                    if (!data) return alert("Access Denied: Email parameter unrecognized in database.");
-                    currentUser = data;
-                } catch (err) {
-                    console.error(err);
-                    return alert("Error connecting to Supabase cloud interface engine.");
+        function toggleAuthFields(role) {
+            if (role === 'MANAGER') {
+                document.getElementById('auth-group-dse').classList.add('hidden');
+                document.getElementById('auth-group-pass').classList.remove('hidden');
+            } else {
+                document.getElementById('auth-group-dse').classList.remove('hidden');
+                document.getElementById('auth-group-pass').classList.add('hidden');
+            }
+        }
+
+        async function processSystemAuthentication() {
+            const chosenRole = document.getElementById('auth-role').value;
+            const errorArea = document.getElementById('auth-error-msg');
+            errorArea.style.display = 'none';
+
+            if (chosenRole === 'MANAGER') {
+                const passwordValue = document.getElementById('auth-password').value;
+                const authRes = await apiRequest('/auth/manager', { method: 'POST', body: { pin: passwordValue } });
+                
+                if (authRes.success) {
+                    sessionState = { mode: 'MANAGER', userId: 'admin', userName: 'Showroom Manager' };
+                    bootWorkspace();
+                } else {
+                    errorArea.textContent = "Invalid manager password or system key validation failure.";
+                    errorArea.style.display = 'block';
                 }
             } else {
-                // Local Mode Mock Verification
-                const found = fallbackProfiles.find(p => p.email === emailInput);
-                if (!found) return alert("Access Denied: Use demo emails listed inside card box.");
-                currentUser = found;
+                const selectIdentity = document.getElementById('auth-dse-identity');
+                if (!selectIdentity.value) return;
+                
+                sessionState = { 
+                    mode: 'DSE', 
+                    userId: selectIdentity.value, 
+                    userName: selectIdentity.options[selectIdentity.selectedIndex].text 
+                };
+                bootWorkspace();
             }
+        }
 
-            document.getElementById('auth-screen').classList.add('hidden');
-            if (currentUser.role === 'MANAGER') {
-                configurePlatformForManagerView();
+        function bootWorkspace() {
+            document.getElementById('panel-auth').classList.add('hidden');
+            document.getElementById('panel-workspace').classList.remove('hidden');
+            
+            const dseSelectorWrapper = document.getElementById('wrapper-dse-dropdown');
+            
+            if (sessionState.mode === 'MANAGER') {
+                dseSelectorWrapper.classList.remove('hidden');
+                document.getElementById('panel-dse').classList.add('hidden');
+                document.getElementById('panel-manager').classList.remove('hidden');
+                toggleManagerTabs('perf');
             } else {
-                configurePlatformForDSEView();
+                dseSelectorWrapper.classList.add('hidden');
+                document.getElementById('selector-active-dse').value = sessionState.userId;
+                document.getElementById('panel-dse').classList.remove('hidden');
+                document.getElementById('panel-manager').classList.add('hidden');
+                loadActiveDataRecords();
+            }
+            updateIdentityBannerUI();
+        }
+
+        function terminateSession() {
+            sessionState = { mode: 'AUTH', userId: '', userName: '' };
+            document.getElementById('auth-password').value = '';
+            document.getElementById('panel-workspace').classList.add('hidden');
+            document.getElementById('panel-auth').classList.remove('hidden');
+            exitRectificationMode();
+        }
+
+        function updateIdentityBannerUI() {
+            const userDisplay = document.getElementById('display-user-identity');
+            if (sessionState.mode === 'MANAGER') {
+                userDisplay.innerHTML = `Administrator Room <span class="manager-indicator">MGR</span>`;
+            } else {
+                userDisplay.textContent = `DSE Profile: ${sessionState.userName}`;
             }
         }
 
-        async function configurePlatformForDSEView() {
-            document.getElementById('panel-dse').classList.remove('hidden');
-            document.getElementById('panel-manager').classList.add('hidden');
-            document.getElementById('display-user-identity').innerHTML = `DSE Profile: <strong>${currentUser.name}</strong>`;
-            
-            const selectEl = document.getElementById('selector-active-dse');
-            selectEl.innerHTML = `<option value="${currentUser.id}">${currentUser.name}</option>`;
-            selectEl.disabled = true;
+        function repopulateDseDropdownSelectors() {
+            const authSelect = document.getElementById('auth-dse-identity');
+            const workspaceSelect = document.getElementById('selector-active-dse');
+            authSelect.innerHTML = '';
+            workspaceSelect.innerHTML = '';
 
-            document.getElementById('manager-edit-banner').classList.add('hidden');
-            document.getElementById('mgr-back-btn').classList.add('hidden');
-            const submitBtn = document.getElementById('submit-action-btn');
-            submitBtn.textContent = "Submit Daily Report";
-            submitBtn.className = "btn";
+            cachedStaff.forEach(person => {
+                const optA = document.createElement('option');
+                optA.value = person.id; optA.textContent = person.name;
+                authSelect.appendChild(optA);
 
-            await fetchDataRecordsForActiveContext();
+                const optW = document.createElement('option');
+                optW.value = person.id; optW.textContent = person.name;
+                workspaceSelect.appendChild(optW);
+            });
         }
 
-        async function configurePlatformForManagerView() {
-            document.getElementById('panel-dse').classList.add('hidden');
-            document.getElementById('panel-manager').classList.remove('hidden');
-            document.getElementById('display-user-identity').innerHTML = `Management Control Panel <span class="manager-indicator">MGR</span>`;
-            
-            await syncManagerDashboardData();
-        }
-
-        async function fetchDataRecordsForActiveContext() {
-            const activeDseId = document.getElementById('selector-active-dse').value;
+        async function loadActiveDataRecords() {
+            const activeDse = document.getElementById('selector-active-dse').value;
             const targetDate = document.getElementById('selector-target-date').value;
+            if(!activeDse) return;
 
-            if (isUsingSupabase) {
-                try {
-                    const { data, error } = await _supabase
-                        .from('performance_records')
-                        .select('*')
-                        .eq('dse_id', activeDseId);
+            // 1. Fetch historical record for that isolated day if existing
+            const dayRecordRes = await apiRequest(`/records/day?dseId=${activeDse}&date=${targetDate}`);
+            const dayData = dayRecordRes.success ? dayRecordRes.data : {};
 
-                    if (error) throw error;
-                    globalHistoricalRecords = data || [];
-                } catch (err) {
-                    console.error("Failed loading from cloud database matrix:", err);
-                }
-            } else {
-                globalHistoricalRecords = fallbackRecords.filter(r => r.dse_id === activeDseId);
-            }
-
-            const activeDayRecord = globalHistoricalRecords.find(r => r.target_date === targetDate);
-            
             MATRIX_KEYS.forEach(k => {
-                document.getElementById(`in-${k}`).value = activeDayRecord?.metrics?.[k] || 0;
+                document.getElementById(`in-${k}`).value = dayData[k] || 0;
+            });
+
+            // 2. Fetch baseline Month-To-Date calculations excluding active input targets
+            const mtdRes = await apiRequest(`/records/mtd-baseline?dseId=${activeDse}&date=${targetDate}`);
+            cachedMTDBase = mtdRes.success ? mtdRes.data : {};
+
+            // Enforce layout accessibility changes relative to Visibility policy
+            document.querySelectorAll('.finance-block').forEach(el => {
+                if (uiFinanceAllowed) el.classList.remove('hidden');
+                else el.classList.add('hidden');
             });
 
             calculateMatrixFormTotals();
         }
 
         function calculateMatrixFormTotals() {
-            const targetDate = document.getElementById('selector-target-date').value;
-            const targetMonthPrefix = targetDate.substring(0, 7);
+            const getInVal = (id) => parseInt(document.getElementById(`in-${id}`).value) || 0;
+            const getMtdTotalOf = (k) => (cachedMTDBase[k] || 0) + getInVal(k);
+            const calcPctString = (bk, enq) => enq > 0 ? Math.round((bk / enq) * 100) + '%' : '0%';
+            const calcPenString = (subItem, base) => base > 0 ? ((subItem / base) * 100).toFixed(1) + '%' : '0.0%';
 
-            const getInVal = (id) => {
-                const val = parseInt(document.getElementById(`in-${id}`).value);
-                return isNaN(val) || val < 0 ? 0 : val;
-            };
-            
-            let mtdSums = {};
-            MATRIX_KEYS.forEach(k => { mtdSums[k] = 0; });
-
-            globalHistoricalRecords.forEach(rec => {
-                if(rec.target_date.startsWith(targetMonthPrefix) && rec.target_date !== targetDate) {
-                    MATRIX_KEYS.forEach(k => {
-                        mtdSums[k] += (rec.metrics?.[k] || 0);
-                    });
-                }
-            });
-
+            // Map UI outputs out to layout grid cells safely
             MATRIX_KEYS.forEach(k => {
                 const cell = document.getElementById(`mtd-${k}`);
-                if (cell) cell.textContent = mtdSums[k] + getInVal(k);
+                if (cell) cell.textContent = getMtdTotalOf(k);
             });
-
-            const getMtdTotalOf = (k) => mtdSums[k] + getInVal(k);
-            const calcPctString = (bk, enq) => enq > 0 ? Math.round((bk / enq) * 100) + '%' : '0%';
 
             document.getElementById('pct-conv-walk').textContent = calcPctString(getMtdTotalOf('bk_walk'), getMtdTotalOf('enq_walk'));
             document.getElementById('pct-conv-tel').textContent = calcPctString(getMtdTotalOf('bk_tel'), getMtdTotalOf('enq_tel'));
@@ -486,8 +542,6 @@
             document.getElementById('lbl-conv-tot').textContent = calcPctString(totBkMtd, totEnqMtd);
 
             const currentRetailMtdSum = getMtdTotalOf('ret_walk');
-            const calcPenString = (subItem, base) => base > 0 ? ((subItem / base) * 100).toFixed(1) + '%' : '0.0%';
-            
             document.getElementById('lbl-ew-pct').textContent = calcPenString(getMtdTotalOf('ew_walk'), currentRetailMtdSum);
             document.getElementById('lbl-rsa-pct').textContent = calcPenString(getMtdTotalOf('rsa_val'), currentRetailMtdSum);
             document.getElementById('lbl-fin-pct').textContent = calcPenString(getMtdTotalOf('fin_val'), currentRetailMtdSum);
@@ -496,120 +550,81 @@
             document.getElementById('lbl-gear-pba').textContent = currentRetailMtdSum > 0 ? Math.round(getMtdTotalOf('gear_val') / currentRetailMtdSum) : 0;
         }
 
-        async function saveActiveMatrixData() {
-            const activeDseId = document.getElementById('selector-active-dse').value;
+        async function saveActiveMatrixRecord() {
+            const activeDse = document.getElementById('selector-active-dse').value;
             const targetDate = document.getElementById('selector-target-date').value;
+            if(!activeDse) return;
             
-            let metricsPayload = {};
+            let dayPayload = {};
             MATRIX_KEYS.forEach(k => {
-                const element = document.getElementById(`in-${k}`);
-                const val = parseInt(element.value);
-                metricsPayload[k] = isNaN(val) || val < 0 ? 0 : val;
+                dayPayload[k] = parseInt(document.getElementById(`in-${k}`).value) || 0;
             });
 
-            if (isUsingSupabase) {
-                try {
-                    const { error } = await _supabase
-                        .from('performance_records')
-                        .upsert({
-                            dse_id: activeDseId,
-                            target_date: targetDate,
-                            metrics: metricsPayload
-                        }, { onConflict: 'dse_id,target_date' });
+            const saveRes = await apiRequest('/records/save', {
+                method: 'POST',
+                body: { dseId: activeDse, date: targetDate, metrics: dayPayload }
+            });
 
-                    if (error) throw error;
-                    alert("Database transaction records synchronized successfully!");
-                } catch (err) {
-                    console.error(err);
-                    return alert("Error executing database update statement.");
-                }
-            } else {
-                // Local Engine Matrix Persistence Logic
-                const matchIndex = fallbackRecords.findIndex(r => r.dse_id === activeDseId && r.target_date === targetDate);
-                if (matchIndex > -1) {
-                    fallbackRecords[matchIndex].metrics = metricsPayload;
+            if (saveRes.success) {
+                alert("Data metrics records processed and committed successfully down to DB cluster!");
+                if (document.getElementById('manager-edit-banner').classList.contains('hidden') === false) {
+                    exitRectificationMode();
                 } else {
-                    fallbackRecords.push({ dse_id: activeDseId, target_date: targetDate, metrics: metricsPayload });
+                    loadActiveDataRecords();
                 }
-                alert("Data localized inside volatile execution stack successfully!");
-            }
-
-            if (currentUser.role === 'MANAGER') {
-                configurePlatformForManagerView();
             } else {
-                await fetchDataRecordsForActiveContext();
+                alert(`Commit error occurred: ${saveRes.error}`);
             }
         }
 
-        async function syncManagerDashboardData() {
-            const targetDate = document.getElementById('manager-dashboard-date').value;
-            const targetMonthPrefix = targetDate.substring(0, 7);
-
-            if (isUsingSupabase) {
-                try {
-                    const staffRes = await _supabase.from('staff_profiles').select('*').eq('role', 'DSE');
-                    const recordsRes = await _supabase.from('performance_records').select('*');
-
-                    if (staffRes.error) throw staffRes.error;
-                    if (recordsRes.error) throw recordsRes.error;
-
-                    globalStaffList = staffRes.data || [];
-                    renderManagerMatrixDashboard(globalStaffList, recordsRes.data || [], targetDate, targetMonthPrefix);
-                } catch (err) {
-                    console.error(err);
-                }
-            } else {
-                globalStaffList = fallbackProfiles.filter(p => p.role === 'DSE');
-                renderManagerMatrixDashboard(globalStaffList, fallbackRecords, targetDate, targetMonthPrefix);
-            }
-        }
-
-        function renderManagerMatrixDashboard(staff, records, targetDate, monthPrefix) {
+        async function renderManagerDashboardMetrics() {
             const reportsContainer = document.getElementById('manager-matrix-reports-container');
             const summaryContainer = document.getElementById('manager-final-summary-container');
-            
-            reportsContainer.innerHTML = '';
+            reportsContainer.innerHTML = '<p style="padding:16px; color:#6b7280;">Fetching real-time team logs...</p>';
             summaryContainer.innerHTML = '';
+            
+            const targetDate = document.getElementById('manager-date-view').value;
+            const dashDataRes = await apiRequest(`/records/dashboard-matrix?date=${targetDate}`);
+            
+            if (!dashDataRes.success) {
+                reportsContainer.innerHTML = '<p style="padding:16px; color:#dc2626;">Error retrieving dynamic records.</p>';
+                return;
+            }
 
-            let masterSummary = { today: {}, mtd: {} };
-            MATRIX_KEYS.forEach(k => { masterSummary.today[k] = 0; masterSummary.mtd[k] = 0; });
+            reportsContainer.innerHTML = '';
+            const { individualReports, consolidatedSummary } = dashDataRes.data;
 
-            staff.forEach(employee => {
-                let todayVal = {};
-                let mtdSum = {};
-                MATRIX_KEYS.forEach(k => { todayVal[k] = 0; mtdSum[k] = 0; });
-
-                const empRecords = records.filter(r => r.dse_id === employee.id);
-                const activeDayRec = empRecords.find(r => r.target_date === targetDate);
-
-                if(activeDayRec) {
-                    MATRIX_KEYS.forEach(k => { todayVal[k] = activeDayRec.metrics?.[k] || 0; });
-                }
-
-                empRecords.forEach(r => {
-                    if(r.target_date.startsWith(monthPrefix)) {
-                        MATRIX_KEYS.forEach(k => { mtdSum[k] += (r.metrics?.[k] || 0); });
-                    }
-                });
-
-                MATRIX_KEYS.forEach(k => {
-                    masterSummary.today[k] += todayVal[k];
-                    masterSummary.mtd[k] += mtdSum[k];
-                });
-
-                const blockDiv = document.createElement('div');
-                blockDiv.className = 'dse-report-block';
-                blockDiv.innerHTML = composeGridMarkupHelper(employee.name, employee.email, todayVal, (k) => mtdSum[k], false, employee.id);
-                reportsContainer.appendChild(blockDiv);
-            });
-
+            // Render consolidated showroom statistics 
             const summaryDiv = document.createElement('div');
             summaryDiv.className = 'dse-report-block summary-block';
-            summaryDiv.innerHTML = composeGridMarkupHelper("⭐ FINAL CUMULATIVE SUMMARY (ALL DSE)", `Consolidated Showroom Statistics for date: ${targetDate}`, masterSummary.today, (k) => masterSummary.mtd[k], true, '');
+            summaryDiv.innerHTML = createGridHTML(
+                "⭐ FINAL CUMULATIVE SUMMARY (ALL DSE)", 
+                `Consolidated Showroom Statistics`, 
+                consolidatedSummary.today, 
+                (k) => consolidatedSummary.mtd[k], 
+                consolidatedSummary.retailMtd, 
+                true, ''
+            );
             summaryContainer.appendChild(summaryDiv);
+
+            // Render each active profile block
+            individualReports.forEach(report => {
+                const blockDiv = document.createElement('div');
+                blockDiv.className = 'dse-report-block';
+                blockDiv.innerHTML = createGridHTML(
+                    report.name, 
+                    report.email, 
+                    report.today, 
+                    (k) => report.mtd[k], 
+                    report.retailMtd, 
+                    false, 
+                    report.id
+                );
+                reportsContainer.appendChild(blockDiv);
+            });
         }
 
-        function composeGridMarkupHelper(title, sub, today, getMtd, isSummary, empId) {
+        function createGridHTML(title, sub, today, getMtd, retailMtd, isSummary, empId) {
             const calcPct = (bk, enq) => enq > 0 ? Math.round((bk / enq) * 100) + '%' : '0%';
             const calcPen = (subItem, base) => base > 0 ? ((subItem / base) * 100).toFixed(1) + '%' : '0.0%';
 
@@ -617,17 +632,17 @@
             const totEnqMtd = getMtd('enq_walk') + getMtd('enq_tel') + getMtd('enq_fld') + getMtd('enq_srv') + getMtd('enq_onl');
             const totBkToday = today.bk_walk + today.bk_tel + today.bk_fld + today.bk_srv + today.bk_onl;
             const totBkMtd = getMtd('bk_walk') + getMtd('bk_tel') + getMtd('bk_fld') + getMtd('bk_srv') + getMtd('bk_onl');
-            const retailMtd = getMtd('ret_walk');
 
             return `
                 <div class="dse-report-header">
                     <div>
-                        <strong style="font-size: 1.1rem; color:#111827;">${title}</strong>
-                        <span style="font-size: 0.8rem; color:#6b7280; margin-left:12px;">${sub}</span>
+                        <strong style="font-size: 1.1rem; color: #111827;">${title}</strong>
+                        <span style="font-size: 0.8rem; color: #6b7280; margin-left:12px;">${sub}</span>
                     </div>
                     ${isSummary ? '' : `<button class="btn" style="padding: 6px 14px; font-size: 0.8rem;" onclick="triggerManagerRectification('${empId}')">Modify / Rectify Metrics</button>`}
                 </div>
-                <div class="table-container" style="border:none; margin-bottom:0;">
+                
+                <div class="table-container" style="box-shadow:none; border-radius:8px; margin-bottom:0;">
                     <table>
                         <thead>
                             <tr>
@@ -652,16 +667,22 @@
                         <tbody>
                             <tr>
                                 <td class="row-label">WALK-IN</td>
-                                <td><strong>${today.enq_walk}</strong></td><td>${getMtd('enq_walk')}</td>
-                                <td><strong>${today.bk_walk}</strong></td><td>${getMtd('bk_walk')}</td>
+                                <td><strong>${today.enq_walk}</strong></td>
+                                <td class="mtd-cell">${getMtd('enq_walk')}</td>
+                                <td><strong>${today.bk_walk}</strong></td>
+                                <td class="mtd-cell">${getMtd('bk_walk')}</td>
                                 <td class="pct-cell">${calcPct(getMtd('bk_walk'), getMtd('enq_walk'))}</td>
-                                <td><strong>${today.ret_walk}</strong></td><td>${getMtd('ret_walk')}</td>
-                                <td><strong>${today.ew_walk}</strong></td><td>${getMtd('ew_walk')}</td>
+                                <td><strong>${today.ret_walk}</strong></td>
+                                <td class="mtd-cell">${getMtd('ret_walk')}</td>
+                                <td><strong>${today.ew_walk}</strong></td>
+                                <td class="mtd-cell">${getMtd('ew_walk')}</td>
                             </tr>
                             <tr>
                                 <td class="row-label">TELEPHONIC</td>
-                                <td><strong>${today.enq_tel}</strong></td><td>${getMtd('enq_tel')}</td>
-                                <td><strong>${today.bk_tel}</strong></td><td>${getMtd('bk_tel')}</td>
+                                <td><strong>${today.enq_tel}</strong></td>
+                                <td class="mtd-cell">${getMtd('enq_tel')}</td>
+                                <td><strong>${today.bk_tel}</strong></td>
+                                <td class="mtd-cell">${getMtd('bk_tel')}</td>
                                 <td class="pct-cell">${calcPct(getMtd('bk_tel'), getMtd('enq_tel'))}</td>
                                 <td colspan="2" class="blocked-cell"></td>
                                 <td class="highlight-lbl">EW %</td>
@@ -669,56 +690,68 @@
                             </tr>
                             <tr>
                                 <td class="row-label">FIELD</td>
-                                <td><strong>${today.enq_fld}</strong></td><td>${getMtd('enq_fld')}</td>
-                                <td><strong>${today.bk_fld}</strong></td><td>${getMtd('bk_fld')}</td>
+                                <td><strong>${today.enq_fld}</strong></td>
+                                <td class="mtd-cell">${getMtd('enq_fld')}</td>
+                                <td><strong>${today.bk_fld}</strong></td>
+                                <td class="mtd-cell">${getMtd('bk_fld')}</td>
                                 <td class="pct-cell">${calcPct(getMtd('bk_fld'), getMtd('enq_fld'))}</td>
                                 <td colspan="2" style="background:#f3f4f6; font-size:0.75rem; font-weight:700; color:#6b7280;">GMA</td>
                                 <td colspan="2" style="background:#f3f4f6; font-size:0.75rem; font-weight:700; color:#6b7280;">RSA</td>
                             </tr>
                             <tr>
                                 <td class="row-label">SERVICE REF</td>
-                                <td><strong>${today.enq_srv}</strong></td><td>${getMtd('enq_srv')}</td>
-                                <td><strong>${today.bk_srv}</strong></td><td>${getMtd('bk_srv')}</td>
+                                <td><strong>${today.enq_srv}</strong></td>
+                                <td class="mtd-cell">${getMtd('enq_srv')}</td>
+                                <td><strong>${today.bk_srv}</strong></td>
+                                <td class="mtd-cell">${getMtd('bk_srv')}</td>
                                 <td class="pct-cell">${calcPct(getMtd('bk_srv'), getMtd('enq_srv'))}</td>
-                                <td class="mtd-cell" style="font-size:0.7rem; color:#9ca3af;">TODAY</td>
-                                <td class="mtd-cell" style="font-size:0.7rem; color:#9ca3af;">MONTH</td>
-                                <td class="mtd-cell" style="font-size:0.7rem; color:#9ca3af;">TODAY</td>
-                                <td class="mtd-cell" style="font-size:0.7rem; color:#9ca3af;">MONTH</td>
+                                <td class="mtd-cell" style="font-size: 0.7rem; color:#9ca3af;">TODAY</td>
+                                <td class="mtd-cell" style="font-size: 0.7rem; color:#9ca3af;">MONTH</td>
+                                <td class="mtd-cell" style="font-size: 0.7rem; color:#9ca3af;">TODAY</td>
+                                <td class="mtd-cell" style="font-size: 0.7rem; color:#9ca3af;">MONTH</td>
                             </tr>
                             <tr>
                                 <td class="row-label">ONLINE</td>
-                                <td><strong>${today.enq_onl}</strong></td><td>${getMtd('enq_onl')}</td>
-                                <td><strong>${today.bk_onl}</strong></td><td>${getMtd('bk_onl')}</td>
+                                <td><strong>${today.enq_onl}</strong></td>
+                                <td class="mtd-cell">${getMtd('enq_onl')}</td>
+                                <td><strong>${today.bk_onl}</strong></td>
+                                <td class="mtd-cell">${getMtd('bk_onl')}</td>
                                 <td class="pct-cell">${calcPct(getMtd('bk_onl'), getMtd('enq_onl'))}</td>
-                                <td><strong>${today.gma_val}</strong></td><td>${getMtd('gma_val')}</td>
-                                <td><strong>${today.rsa_val}</strong></td><td>${getMtd('rsa_val')}</td>
+                                <td><strong>${today.gma_val}</strong></td>
+                                <td class="mtd-cell">${getMtd('gma_val')}</td>
+                                <td><strong>${today.rsa_val}</strong></td>
+                                <td class="mtd-cell">${getMtd('rsa_val')}</td>
                             </tr>
                             <tr class="total-row">
                                 <td style="text-align:left; padding-left:14px;">TOTAL</td>
-                                <td>${totEnqToday}</td><td>${totEnqMtd}</td>
-                                <td>${totBkToday}</td><td>${totBkMtd}</td>
-                                <td style="background:#fef9c3; color:#1e3a8a;">${calcPct(totBkMtd, totEnqMtd)}</td>
+                                <td>${totEnqToday}</td>
+                                <td>${totEnqMtd}</td>
+                                <td>${totBkToday}</td>
+                                <td>${totBkMtd}</td>
+                                <td class="total-pct">${calcPct(totBkMtd, totEnqMtd)}</td>
                                 <td class="highlight-lbl">GMA PBA</td>
                                 <td class="highlight-val">${retailMtd > 0 ? Math.round(getMtd('gma_val') / retailMtd) : 0}</td>
                                 <td class="highlight-lbl">RSA %</td>
                                 <td class="highlight-val">${calcPen(getMtd('rsa_val'), retailMtd)}</td>
                             </tr>
-                            <tr>
+                            <tr class="${uiFinanceAllowed ? '' : 'hidden'}">
                                 <td colspan="6" rowspan="3" style="background:#e5e7eb;"></td>
                                 <td colspan="2" style="background:#f3f4f6; font-size:0.75rem; font-weight:700; color:#6b7280;">GEAR</td>
                                 <td colspan="2" style="background:#f3f4f6; font-size:0.75rem; font-weight:700; color:#6b7280;">IN HOUSE FINANCE</td>
                             </tr>
-                            <tr>
-                                <td class="mtd-cell" style="font-size:0.7rem; color:#9ca3af;">TODAY</td>
-                                <td class="mtd-cell" style="font-size:0.7rem; color:#9ca3af;">MONTH</td>
-                                <td class="mtd-cell" style="font-size:0.7rem; color:#9ca3af;">TODAY</td>
-                                <td class="mtd-cell" style="font-size:0.7rem; color:#9ca3af;">MONTH</td>
+                            <tr class="${uiFinanceAllowed ? '' : 'hidden'}">
+                                <td class="mtd-cell" style="font-size: 0.7rem; color:#9ca3af;">TODAY</td>
+                                <td class="mtd-cell" style="font-size: 0.7rem; color:#9ca3af;">MONTH</td>
+                                <td class="mtd-cell" style="font-size: 0.7rem; color:#9ca3af;">TODAY</td>
+                                <td class="mtd-cell" style="font-size: 0.7rem; color:#9ca3af;">MONTH</td>
                             </tr>
-                            <tr>
-                                <td><strong>${today.gear_val}</strong></td><td>${getMtd('gear_val')}</td>
-                                <td><strong>${today.fin_val}</strong></td><td>${getMtd('fin_val')}</td>
+                            <tr class="${uiFinanceAllowed ? '' : 'hidden'}">
+                                <td><strong>${today.gear_val}</strong></td>
+                                <td class="mtd-cell">${getMtd('gear_val')}</td>
+                                <td><strong>${today.fin_val}</strong></td>
+                                <td class="mtd-cell">${getMtd('fin_val')}</td>
                             </tr>
-                            <tr>
+                            <tr class="${uiFinanceAllowed ? '' : 'hidden'}">
                                 <td colspan="6" style="background:#e5e7eb; border-top:1px solid #e5e7eb;"></td>
                                 <td class="highlight-lbl">GEAR PBA</td>
                                 <td class="highlight-val">${retailMtd > 0 ? Math.round(getMtd('gear_val') / retailMtd) : 0}</td>
@@ -732,122 +765,112 @@
         }
 
         function triggerManagerRectification(staffId) {
+            document.getElementById('selector-active-dse').value = staffId;
+            // Sync sync inputs back to the manager view date pickers
+            document.getElementById('selector-target-date').value = document.getElementById('manager-date-view').value;
+            
             document.getElementById('panel-dse').classList.remove('hidden');
             document.getElementById('panel-manager').classList.add('hidden');
+            loadActiveDataRecords();
             
-            const selectEl = document.getElementById('selector-active-dse');
-            selectEl.innerHTML = '';
-            
-            globalStaffList.forEach(p => {
-                const opt = document.createElement('option');
-                opt.value = p.id; opt.textContent = p.name;
-                if(p.id === staffId) opt.selected = true;
-                selectEl.appendChild(opt);
-            });
-            selectEl.disabled = false;
-
             document.getElementById('manager-edit-banner').classList.remove('hidden');
-            document.getElementById('mgr-back-btn').classList.remove('hidden');
-            
-            const targetDashboardDate = document.getElementById('manager-dashboard-date').value;
-            document.getElementById('selector-target-date').value = targetDashboardDate;
-
             const submitBtn = document.getElementById('submit-action-btn');
             submitBtn.textContent = "Save Changes & Rectify";
             submitBtn.className = "btn btn-success";
-
-            fetchDataRecordsForActiveContext();
         }
 
-        function shiftManagerActiveTab(targetTab) {
+        function exitRectificationMode() {
+            document.getElementById('manager-edit-banner').classList.add('hidden');
+            document.getElementById('panel-dse').classList.add('hidden');
+            document.getElementById('panel-manager').classList.remove('hidden');
+            
+            const submitBtn = document.getElementById('submit-action-btn');
+            submitBtn.textContent = "Submit Daily Report";
+            submitBtn.className = "btn";
+            renderManagerDashboardMetrics();
+        }
+
+        function toggleManagerTabs(targetTab) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.sub-panel').forEach(p => p.classList.add('hidden'));
             
             document.getElementById(`tab-link-${targetTab}`).classList.add('active');
             document.getElementById(`view-sub-${targetTab}`).classList.remove('hidden');
             
-            if (targetTab === 'staff') renderManagerStaffDirectory();
-            if (targetTab === 'perf') syncManagerDashboardData();
+            if (targetTab === 'staff') renderStaffProfilesDirectory();
+            if (targetTab === 'perf') renderManagerDashboardMetrics();
         }
 
-        function renderManagerStaffDirectory() {
+        async function renderStaffProfilesDirectory() {
             const container = document.getElementById('manager-staff-list-container');
+            container.innerHTML = '<p style="color:#6b7280;">Loading active profiles...</p>';
+            
+            const res = await apiRequest('/staff');
+            if(!res.success) return;
+            
+            cachedStaff = res.data;
             container.innerHTML = '';
-            globalStaffList.forEach(m => {
+            
+            cachedStaff.forEach(member => {
                 const div = document.createElement('div');
                 div.className = 'directory-item';
                 div.innerHTML = `
                     <div>
-                        <strong>${m.name}</strong>
-                        <span style="display:block; font-size:0.75rem; color:#6b7280;">${m.email}</span>
+                        <strong style="font-size:0.9rem; color:#111827;">${member.name}</strong>
+                        <span style="display:block; font-size:0.75rem; color:#64748b;">${member.email}</span>
                     </div>
-                    <button class="btn-danger" onclick="deleteStaffAccountRecord('${m.id}')">Remove Staff</button>
+                    <button class="btn-danger" onclick="deleteDSEAccount('${member.id}')">Remove Staff</button>
                 `;
                 container.appendChild(div);
             });
+            repopulateDseDropdownSelectors();
         }
 
-        async function createNewDSEUserAccount() {
-            const name = document.getElementById('add-name').value.trim();
-            const email = document.getElementById('add-email').value.trim().toLowerCase();
-            if(!name || !email) return alert("Please fill out complete profile information indices.");
+        async function createNewDSEUser() {
+            const nameEl = document.getElementById('add-name');
+            const emailEl = document.getElementById('add-email');
+            if (!nameEl.value || !emailEl.value) return alert("Please fill out complete profile information.");
 
-            const newId = 'dse-' + Date.now();
+            const res = await apiRequest('/staff/add', {
+                method: 'POST',
+                body: { name: nameEl.value, email: emailEl.value }
+            });
 
-            if (isUsingSupabase) {
-                try {
-                    const { error } = await _supabase
-                        .from('staff_profiles')
-                        .insert({ id: newId, name, email, role: 'DSE' });
-
-                    if (error) throw error;
-                } catch (err) {
-                    console.error(err);
-                    return alert("Failed writing new record to database profile schemas.");
-                }
+            if (res.success) {
+                nameEl.value = '';
+                emailEl.value = '';
+                await renderStaffProfilesDirectory();
             } else {
-                fallbackProfiles.push({ id: newId, name, email, role: 'DSE' });
+                alert(`Error: ${res.error}`);
             }
+        }
 
-            document.getElementById('add-name').value = '';
-            document.getElementById('add-email').value = '';
+        async function deleteDSEAccount(id) {
+            if (!confirm("Are you sure you want to completely drop this staff profile from DB logs?")) return;
             
-            if (isUsingSupabase) {
-                const staffRes = await _supabase.from('staff_profiles').select('*').eq('role', 'DSE');
-                globalStaffList = staffRes.data || [];
+            const res = await apiRequest(`/staff/remove`, {
+                method: 'DELETE',
+                body: { id }
+            });
+
+            if (res.success) {
+                await renderStaffProfilesDirectory();
             } else {
-                globalStaffList = fallbackProfiles.filter(p => p.role === 'DSE');
+                alert(`Error: ${res.error}`);
             }
-            renderManagerStaffDirectory();
         }
 
-        async function deleteStaffAccountRecord(id) {
-            if(!confirm("Are you sure you want to remove this staff profile from the system database?")) return;
-            
-            if (isUsingSupabase) {
-                try {
-                    const { error } = await _supabase.from('staff_profiles').delete().eq('id', id);
-                    if (error) throw error;
-                } catch (err) {
-                    console.error(err);
-                    return alert("Failed executing row removal on cloud table schema.");
-                }
-            } else {
-                fallbackProfiles = fallbackProfiles.filter(p => p.id !== id);
-                fallbackRecords = fallbackRecords.filter(r => r.dse_id !== id);
+        async function modifyFinanceAccessRule(isChecked) {
+            const res = await apiRequest('/rules/finance', {
+                method: 'POST',
+                body: { allowed: isChecked }
+            });
+            if (res.success) {
+                uiFinanceAllowed = isChecked;
             }
-
-            globalStaffList = globalStaffList.filter(m => m.id !== id);
-            renderManagerStaffDirectory();
         }
 
-        function logUserOut() {
-            currentUser = null;
-            document.getElementById('auth-screen').classList.remove('hidden');
-            document.getElementById('panel-dse').classList.add('hidden');
-            document.getElementById('panel-manager').classList.add('hidden');
-            document.getElementById('auth-email-input').value = '';
-        }
+        initAppEngine();
     </script>
 </body>
 </html>
