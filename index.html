@@ -403,22 +403,22 @@
         }
 
         async function processSystemAuthentication() {
-            const chosenRole = document.getElementById('auth-role').value;
-            const errorArea = document.getElementById('auth-error-msg');
-            errorArea.style.display = 'none';
+    const chosenRole = document.getElementById('auth-role').value;
+    const errorArea = document.getElementById('auth-error-msg');
+    errorArea.style.display = 'none';
 
-            if (chosenRole === 'MANAGER') {
-                const passwordValue = document.getElementById('auth-password').value;
-                const authRes = await apiRequest('/auth/manager', { method: 'POST', body: { pin: passwordValue } });
-                
-                if (authRes.success) {
-                    sessionState = { mode: 'MANAGER', userId: 'admin', userName: 'Showroom Manager' };
-                    bootWorkspace();
-                } else {
-                    errorArea.textContent = "Invalid manager password or system key validation failure.";
-                    errorArea.style.display = 'block';
-                }
-            } else {
+    if (chosenRole === 'MANAGER') {
+        const passwordValue = document.getElementById('auth-password').value;
+        
+        // TEMPORARY MOCK FOR LOCAL TESTING (Change '1234' to whatever you want):
+        if (passwordValue === '1234') { 
+            sessionState = { mode: 'MANAGER', userId: 'admin', userName: 'Showroom Manager' };
+            bootWorkspace();
+        } else {
+            errorArea.textContent = "Invalid manager password.";
+            errorArea.style.display = 'block';
+        }
+    } else {
                 const selectIdentity = document.getElementById('auth-dse-identity');
                 if (!selectIdentity.value) return;
                 
