@@ -81,14 +81,10 @@
 
         .hidden { display: none !important; }
         .manager-indicator { font-size: 0.75rem; font-weight: 700; background: #dc2626; color: white; padding: 2px 8px; border-radius: 4px; margin-left: 8px; text-transform: uppercase; vertical-align: middle; }
-        
-        /* Loading Overlay */
-        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 1.2rem; z-index: 9999; transition: opacity 0.3s; }
+        .status-badge { font-size: 0.75rem; font-weight: bold; padding: 4px 8px; border-radius: 6px; color: white; }
     </style>
 </head>
 <body>
-
-    <div id="loader">Syncing with Supabase Cloud Engine...</div>
 
     <div class="container">
         
@@ -97,7 +93,7 @@
                 <div class="logo">DSE</div>
                 <div class="title">
                     <h1>Performance Matrix Control System</h1>
-                    <p>Live Editing Architecture & Supabase Production Sync Engine</p>
+                    <p id="sync-status">Sync Engine initializing...</p>
                 </div>
             </div>
             <div class="controls">
@@ -232,7 +228,7 @@
                             <td colspan="2" style="background:#f3f4f6; font-size:0.75rem; font-weight:700; color:#6b7280;">GEAR</td>
                             <td colspan="2" style="background:#f3f4f6; font-size:0.75rem; font-weight:700; color:#6b7280;">IN HOUSE FINANCE</td>
                         </tr>
-                        <tr id="finance-subhead-row">
+                        <tr id="finance-lbl-row">
                             <td class="mtd-cell" style="font-size: 0.7rem; color:#9ca3af;">TODAY</td>
                             <td class="mtd-cell" style="font-size: 0.7rem; color:#9ca3af;">MONTH</td>
                             <td class="mtd-cell" style="font-size: 0.7rem; color:#9ca3af;">TODAY</td>
@@ -244,7 +240,7 @@
                             <td><input type="number" id="in-fin_val" value="0" oninput="calculateMatrixFormTotals()"></td>
                             <td class="mtd-cell" id="mtd-fin_val">0</td>
                         </tr>
-                        <tr id="finance-total-row">
+                        <tr id="finance-pct-row">
                             <td colspan="6" style="background:#e5e7eb; border-top:1px solid #e5e7eb;"></td>
                             <td class="highlight-lbl">GEAR PBA</td>
                             <td class="highlight-val" id="lbl-gear-pba">0</td>
@@ -317,12 +313,16 @@
     </div>
 
     <script>
-        // SUPABASE CONNECTION SETTINGS
-        const SUPABASE_URL = "https://zgnkmqyfelgyzsuyecrr.supabase.com";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpnbmttcXlmZWxneXpzdXllY3JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5MTA3ODQsImV4cCI6MjA5NjQ4Njc4NH0.mHJ2kCdMChdtwYP2rEJ1dwqPrpVJQAMph6FeMD0z9Eo";
-        
-        // Initialize Supabase Client
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // ==========================================
+        //  SUPABASE PIPELINE CONFIGURATION HUB
+        // ==========================================
+        const CONFIG = {
+            supabaseUrl: "https://zgnkmqyfelgyzsuyecrr.supabase.co",       // 👈 PASTE YOUR URL HERE
+            supabaseAnonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpnbmttcXlmZWxneXpzdXllY3JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5MTA3ODQsImV4cCI6MjA5NjQ4Njc4NH0.mHJ2kCdMChdtwYP2rEJ1dwqPrpVJQAMph6FeMD0z9Eo"   // 👈 PASTE YOUR ANON API KEY HERE
+        };
+
+        let _supabase = null;
+        let isUsingSupabase = false;
 
         const MANAGER_PASSWORD = "Manager123"; 
 
@@ -332,7 +332,6 @@
             { id: "dse-3", name: "Priya Mehta", email: "priya@dealership.com" }
         ];
 
-        // System Base Baseline Month Figures
         const DEFAULT_METRICS = {
             "dse-1": { enq_walk: 45, enq_tel: 20, enq_fld: 5, enq_srv: 3, enq_onl: 6, bk_walk: 12, bk_tel: 8, bk_fld: 2, bk_srv: 1, bk_onl: 4, ret_walk: 15, ew_walk: 8, gma_val: 24000, rsa_val: 6, gear_val: 4500, fin_val: 7 },
             "dse-2": { enq_walk: 30, enq_tel: 15, enq_fld: 2, enq_srv: 4, enq_onl: 10, bk_walk: 8, bk_tel: 5, bk_fld: 1, bk_srv: 2, bk_onl: 5, ret_walk: 10, ew_walk: 5, gma_val: 18500, rsa_val: 4, gear_val: 2000, fin_val: 3 },
@@ -350,68 +349,69 @@
 
         let selectedDseId = '';
 
-        // Show/Hide global loading overlay helper
-        function toggleLoader(show) {
-            document.getElementById('loader').style.opacity = show ? '1' : '0';
-            document.getElementById('loader').style.pointerEvents = show ? 'all' : 'none';
+        // App Initialization
+        window.addEventListener('DOMContentLoaded', () => {
+            initAppEngine();
+        });
+
+        async function initAppEngine() {
+            const statusEl = document.getElementById('sync-status');
+            
+            // Check if user replaced placeholder credentials strings
+            if (CONFIG.supabaseUrl && CONFIG.supabaseUrl !== "YOUR_SUPABASE_URL_HERE" && CONFIG.supabaseAnonKey && CONFIG.supabaseAnonKey !== "YOUR_SUPABASE_ANON_KEY") {
+                try {
+                    _supabase = supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseAnonKey);
+                    isUsingSupabase = true;
+                    statusEl.textContent = "Live Cloud Sync Engine Connected";
+                    statusEl.className = "status-badge";
+                    statusEl.style.backgroundColor = "#16a34a";
+                } catch (e) {
+                    console.error("Supabase Client Init Failed:", e);
+                    isUsingSupabase = false;
+                }
+            }
+
+            if (!isUsingSupabase) {
+                statusEl.textContent = "Local Storage Volatile Standalone Mode";
+                statusEl.className = "status-badge";
+                statusEl.style.backgroundColor = "#d97706";
+                
+                db.staff = JSON.parse(localStorage.getItem('dse_staff')) || DEFAULT_STAFF;
+                db.records = JSON.parse(localStorage.getItem('dse_records')) || {};
+                localStorage.setItem('dse_staff', JSON.stringify(db.staff));
+            } else {
+                await syncDataFromSupabaseCloud();
+            }
+
+            db.financeAllowed = localStorage.getItem('dse_rule_fin') !== 'false';
+            document.getElementById('checkbox-rule-finance').checked = db.financeAllowed;
+            
+            repopulateDseDropdownSelectors();
+            loadActiveDataRecords();
         }
 
-        // AUTO-INIT ENGINE SYSTEM SHIFTING TO SUPABASE REMOTE CALLS
-        async function initAppEngine() {
-            toggleLoader(true);
+        async function syncDataFromSupabaseCloud() {
             try {
-                // 1. Fetch Visibility Policies / Rules Configuration
-                let { data: rulesData, error: rulesErr } = await supabase.from('dse_rules').select('*').eq('key', 'dse_rule_fin').single();
-                if (rulesErr && rulesErr.code !== 'PGRST116') throw rulesErr;
-                
-                if (rulesData) {
-                    db.financeAllowed = rulesData.value === 'true' || rulesData.value === true;
-                } else {
-                    // Seed rule if missing
-                    await supabase.from('dse_rules').insert([{ key: 'dse_rule_fin', value: 'true' }]);
-                    db.financeAllowed = true;
-                }
-                document.getElementById('checkbox-rule-finance').checked = db.financeAllowed;
+                // Fetch staff profiles table rows
+                let { data: staffData, error: e1 } = await _supabase.from('staff_profiles').select('*');
+                if (e1) throw e1;
+                db.staff = staffData || [];
 
-                // 2. Fetch Active Staff System Rows
-                let { data: staffData, error: staffErr } = await supabase.from('dse_staff').select('*');
-                if (staffErr) throw staffErr;
+                // Fetch database metric logs entries
+                let { data: recordData, error: e2 } = await _supabase.from('performance_records').select('*');
+                if (e2) throw e2;
 
-                if (staffData && staffData.length > 0) {
-                    db.staff = staffData;
-                } else {
-                    // Seed defaults cleanly
-                    let { data: seededStaff, error: seedErr } = await supabase.from('dse_staff').insert(DEFAULT_STAFF).select();
-                    if (seedErr) throw seedErr;
-                    db.staff = seededStaff;
-                }
-
-                // 3. Sync Dynamic Operational Logs Table
-                let { data: recordsData, error: recordsErr } = await supabase.from('dse_records').select('*');
-                if (recordsErr) throw recordsErr;
-
+                // Restructure flat database tracking rows back into nested JSON dictionaries map
                 db.records = {};
-                if (recordsData) {
-                    recordsData.forEach(row => {
+                if (recordData) {
+                    recordData.forEach(row => {
                         if (!db.records[row.dse_id]) db.records[row.dse_id] = {};
-                        db.records[row.dse_id][row.date_str] = row.payload;
+                        db.records[row.dse_id][row.target_date] = row.metrics;
                     });
                 }
-
-                repopulateDseDropdownSelectors();
-                loadActiveDataRecords();
-
             } catch (err) {
-                console.error("Critical Runtime Initialization Interrupted:", err);
-                alert("Database Initialization Notice:\nIf tables haven't been configured yet, ensure you have created tables matching columns: dse_staff(id, name, email), dse_records(dse_id, date_str, payload), and dse_rules(key, value). Falling back to running local sandbox mode client side safely.");
-                
-                // Pure Local Sandbox Failover Engine Configuration
-                db.staff = DEFAULT_STAFF;
-                db.financeAllowed = true;
-                repopulateDseDropdownSelectors();
-                loadActiveDataRecords();
-            } finally {
-                toggleLoader(false);
+                console.error("Cloud Database Synchronize Fail:", err);
+                alert("Error connecting to Supabase cloud interface engine. Please verify table infrastructure schemas.");
             }
         }
 
@@ -493,15 +493,19 @@
                 document.getElementById(`in-${k}`).value = todayRecord[k] || 0;
             });
 
-            // Handle Financial Access Security Layout Parameter dynamically
-            const elements = ['finance-head-row', 'finance-subhead-row', 'finance-input-row', 'finance-total-row'];
-            elements.forEach(id => {
-                const el = document.getElementById(id);
-                if (el) {
-                    if (db.financeAllowed) el.classList.remove('hidden');
-                    else el.classList.add('hidden');
-                }
-            });
+            // Handle visibility policies blocks
+            const finHead = document.getElementById('finance-head-row');
+            const finLbl = document.getElementById('finance-lbl-row');
+            const finInput = document.getElementById('finance-input-row');
+            const finPct = document.getElementById('finance-pct-row');
+
+            if (db.financeAllowed) {
+                finHead.classList.remove('hidden'); finLbl.classList.remove('hidden');
+                finInput.classList.remove('hidden'); finPct.classList.remove('hidden');
+            } else {
+                finHead.classList.add('hidden'); finLbl.classList.add('hidden');
+                finInput.classList.add('hidden'); finPct.classList.add('hidden');
+            }
 
             calculateMatrixFormTotals();
             updateIdentityBannerUI();
@@ -562,51 +566,47 @@
             document.getElementById('lbl-gear-pba').textContent = currentRetailMtdSum > 0 ? Math.round(getMtdTotalOf('gear_val') / currentRetailMtdSum) : 0;
         }
 
-        // REMOTELY SAVE MATRICES DIRECTLY TO SUPABASE WITH UPSERT PATTERNS
         async function saveActiveMatrixRecord() {
             selectedDseId = document.getElementById('selector-active-dse').value;
             const targetDate = document.getElementById('selector-target-date').value;
             if(!selectedDseId) return;
-            
-            toggleLoader(true);
             
             let dayPayload = {};
             MATRIX_KEYS.forEach(k => {
                 dayPayload[k] = parseInt(document.getElementById(`in-${k}`).value) || 0;
             });
 
-            try {
-                // Upsert operational metric records dynamically targeting matching primary constraints
-                let { error } = await supabase
-                    .from('dse_records')
-                    .upsert({ 
-                        dse_id: selectedDseId, 
-                        date_str: targetDate, 
-                        payload: dayPayload 
-                    }, { onConflict: 'dse_id,date_str' });
+            if (!db.records[selectedDseId]) db.records[selectedDseId] = {};
+            db.records[selectedDseId][targetDate] = dayPayload;
 
-                if (error) throw error;
+            if (isUsingSupabase) {
+                try {
+                    const { error } = await _supabase
+                        .from('performance_records')
+                        .upsert({
+                            dse_id: selectedDseId,
+                            target_date: targetDate,
+                            metrics: dayPayload
+                        }, { onConflict: 'dse_id,target_date' });
 
-                // Sync internal object structure
-                if (!db.records[selectedDseId]) db.records[selectedDseId] = {};
-                db.records[selectedDseId][targetDate] = dayPayload;
-                
-                alert("Data metrics records processed and committed to Supabase Cloud Engine successfully!");
-                
-                if (db.systemMode === 'MANAGER') {
-                    changeSystemRole('MANAGER');
-                } else {
-                    loadActiveDataRecords();
+                    if (error) throw error;
+                } catch (err) {
+                    console.error("Supabase Save Error:", err);
+                    return alert("Failed writing metric logs payload to remote data tables.");
                 }
-            } catch (err) {
-                console.error("Failed to commit metrics to Supabase backend:", err);
-                alert("Cloud Sync Interrupted: Could not save records to Supabase.");
-            } finally {
-                toggleLoader(false);
+            } else {
+                localStorage.setItem('dse_records', JSON.stringify(db.records));
+            }
+            
+            alert("Data metrics records processed and committed successfully!");
+            
+            if (db.systemMode === 'MANAGER') {
+                renderManagerDashboardMetrics();
+            } else {
+                loadActiveDataRecords();
             }
         }
 
-        // COMPOSE COMBINED VISUAL MAP (FINAL CUMULATIVE & INDIVIDUAL DSE BLOCKS)
         function renderManagerDashboardMetrics() {
             const reportsContainer = document.getElementById('manager-matrix-reports-container');
             const summaryContainer = document.getElementById('manager-final-summary-container');
@@ -617,11 +617,7 @@
             const targetDate = document.getElementById('selector-target-date').value;
             const targetMonthPrefix = targetDate.substring(0, 7);
 
-            // Master data accumulator object for Final Summary
-            let masterSummary = {
-                today: {},
-                mtd: {}
-            };
+            let masterSummary = { today: {}, mtd: {} };
             MATRIX_KEYS.forEach(k => { masterSummary.today[k] = 0; masterSummary.mtd[k] = 0; });
 
             db.staff.forEach(employee => {
@@ -633,8 +629,6 @@
                 MATRIX_KEYS.forEach(k => { 
                     todayVal[k] = activeDayRecord[k] || 0;
                     mtdSums[k] = DEFAULT_METRICS[employee.id]?.[k] || 0; 
-                    
-                    // Add up inside master summary counter
                     masterSummary.today[k] += todayVal[k];
                 });
 
@@ -646,7 +640,6 @@
                     });
                 }
 
-                // Push individual absolute results into master matrix
                 MATRIX_KEYS.forEach(k => {
                     masterSummary.mtd[k] += (mtdSums[k] + todayVal[k]);
                 });
@@ -667,7 +660,6 @@
                 reportsContainer.appendChild(blockDiv);
             });
 
-            // Calculate and display Master Final Summary Layout Block
             const sumGetMtd = (k) => masterSummary.mtd[k];
             const sumCalcPct = (bk, enq) => enq > 0 ? Math.round((bk / enq) * 100) + '%' : '0%';
             const sumCalcPen = (subItem, base) => base > 0 ? ((subItem / base) * 100).toFixed(1) + '%' : '0.0%';
@@ -684,7 +676,6 @@
             summaryContainer.appendChild(summaryDiv);
         }
 
-        // GENERATION HELPER PATTERN FUNCTION
         function createGridHTML(title, sub, today, getMtd, calcPct, calcPen, totEnqToday, totEnqMtd, totBkToday, totBkMtd, retailMtd, isSummary, empId) {
             return `
                 <div class="dse-report-header">
@@ -720,22 +711,16 @@
                         <tbody>
                             <tr>
                                 <td class="row-label">WALK-IN</td>
-                                <td><strong>${today.enq_walk || 0}</strong></td>
-                                <td class="mtd-cell">${getMtd('enq_walk')}</td>
-                                <td><strong>${today.bk_walk || 0}</strong></td>
-                                <td class="mtd-cell">${getMtd('bk_walk')}</td>
+                                <td><strong>${today.enq_walk}</strong></td><td class="mtd-cell">${getMtd('enq_walk')}</td>
+                                <td><strong>${today.bk_walk}</strong></td><td class="mtd-cell">${getMtd('bk_walk')}</td>
                                 <td class="pct-cell">${calcPct(getMtd('bk_walk'), getMtd('enq_walk'))}</td>
-                                <td><strong>${today.ret_walk || 0}</strong></td>
-                                <td class="mtd-cell">${getMtd('ret_walk')}</td>
-                                <td><strong>${today.ew_walk || 0}</strong></td>
-                                <td class="mtd-cell">${getMtd('ew_walk')}</td>
+                                <td><strong>${today.ret_walk}</strong></td><td class="mtd-cell">${getMtd('ret_walk')}</td>
+                                <td><strong>${today.ew_walk}</strong></td><td class="mtd-cell">${getMtd('ew_walk')}</td>
                             </tr>
                             <tr>
                                 <td class="row-label">TELEPHONIC</td>
-                                <td><strong>${today.enq_tel || 0}</strong></td>
-                                <td class="mtd-cell">${getMtd('enq_tel')}</td>
-                                <td><strong>${today.bk_tel || 0}</strong></td>
-                                <td class="mtd-cell">${getMtd('bk_tel')}</td>
+                                <td><strong>${today.enq_tel}</strong></td><td class="mtd-cell">${getMtd('enq_tel')}</td>
+                                <td><strong>${today.bk_tel}</strong></td><td class="mtd-cell">${getMtd('bk_tel')}</td>
                                 <td class="pct-cell">${calcPct(getMtd('bk_tel'), getMtd('enq_tel'))}</td>
                                 <td colspan="2" class="blocked-cell"></td>
                                 <td class="highlight-lbl">EW %</td>
@@ -743,20 +728,16 @@
                             </tr>
                             <tr>
                                 <td class="row-label">FIELD</td>
-                                <td><strong>${today.enq_fld || 0}</strong></td>
-                                <td class="mtd-cell">${getMtd('enq_fld')}</td>
-                                <td><strong>${today.bk_fld || 0}</strong></td>
-                                <td class="mtd-cell">${getMtd('bk_fld')}</td>
+                                <td><strong>${today.enq_fld}</strong></td><td class="mtd-cell">${getMtd('enq_fld')}</td>
+                                <td><strong>${today.bk_fld}</strong></td><td class="mtd-cell">${getMtd('bk_fld')}</td>
                                 <td class="pct-cell">${calcPct(getMtd('bk_fld'), getMtd('enq_fld'))}</td>
                                 <td colspan="2" style="background:#f3f4f6; font-size:0.75rem; font-weight:700; color:#6b7280;">GMA</td>
                                 <td colspan="2" style="background:#f3f4f6; font-size:0.75rem; font-weight:700; color:#6b7280;">RSA</td>
                             </tr>
                             <tr>
                                 <td class="row-label">SERVICE REF</td>
-                                <td><strong>${today.enq_srv || 0}</strong></td>
-                                <td class="mtd-cell">${getMtd('enq_srv')}</td>
-                                <td><strong>${today.bk_srv || 0}</strong></td>
-                                <td class="mtd-cell">${getMtd('bk_srv')}</td>
+                                <td><strong>${today.enq_srv}</strong></td><td class="mtd-cell">${getMtd('enq_srv')}</td>
+                                <td><strong>${today.bk_srv}</strong></td><td class="mtd-cell">${getMtd('bk_srv')}</td>
                                 <td class="pct-cell">${calcPct(getMtd('bk_srv'), getMtd('enq_srv'))}</td>
                                 <td class="mtd-cell" style="font-size: 0.7rem; color:#9ca3af;">TODAY</td>
                                 <td class="mtd-cell" style="font-size: 0.7rem; color:#9ca3af;">MONTH</td>
@@ -765,22 +746,16 @@
                             </tr>
                             <tr>
                                 <td class="row-label">ONLINE</td>
-                                <td><strong>${today.enq_onl || 0}</strong></td>
-                                <td class="mtd-cell">${getMtd('enq_onl')}</td>
-                                <td><strong>${today.bk_onl || 0}</strong></td>
-                                <td class="mtd-cell">${getMtd('bk_onl')}</td>
+                                <td><strong>${today.enq_onl}</strong></td><td class="mtd-cell">${getMtd('enq_onl')}</td>
+                                <td><strong>${today.bk_onl}</strong></td><td class="mtd-cell">${getMtd('bk_onl')}</td>
                                 <td class="pct-cell">${calcPct(getMtd('bk_onl'), getMtd('enq_onl'))}</td>
-                                <td><strong>${today.gma_val || 0}</strong></td>
-                                <td class="mtd-cell">${getMtd('gma_val')}</td>
-                                <td><strong>${today.rsa_val || 0}</strong></td>
-                                <td class="mtd-cell">${getMtd('rsa_val')}</td>
+                                <td><strong>${today.gma_val}</strong></td><td class="mtd-cell">${getMtd('gma_val')}</td>
+                                <td><strong>${today.rsa_val}</strong></td><td class="mtd-cell">${getMtd('rsa_val')}</td>
                             </tr>
                             <tr class="total-row">
                                 <td style="text-align:left; padding-left:14px;">TOTAL</td>
-                                <td>${totEnqToday}</td>
-                                <td>${totEnqMtd}</td>
-                                <td>${totBkToday}</td>
-                                <td>${totBkMtd}</td>
+                                <td>${totEnqToday}</td><td>${totEnqMtd}</td>
+                                <td>${totBkToday}</td><td>${totBkMtd}</td>
                                 <td class="total-pct">${calcPct(totBkMtd, totEnqMtd)}</td>
                                 <td class="highlight-lbl">GMA PBA</td>
                                 <td class="highlight-val">${retailMtd > 0 ? Math.round(getMtd('gma_val') / retailMtd) : 0}</td>
@@ -799,10 +774,8 @@
                                 <td class="mtd-cell" style="font-size: 0.7rem; color:#9ca3af;">MONTH</td>
                             </tr>
                             <tr class="${db.financeAllowed ? '' : 'hidden'}">
-                                <td><strong>${today.gear_val || 0}</strong></td>
-                                <td class="mtd-cell">${getMtd('gear_val')}</td>
-                                <td><strong>${today.fin_val || 0}</strong></td>
-                                <td class="mtd-cell">${getMtd('fin_val')}</td>
+                                <td><strong>${today.gear_val}</strong></td><td class="mtd-cell">${getMtd('gear_val')}</td>
+                                <td><strong>${today.fin_val}</strong></td><td class="mtd-cell">${getMtd('fin_val')}</td>
                             </tr>
                             <tr class="${db.financeAllowed ? '' : 'hidden'}">
                                 <td colspan="6" style="background:#e5e7eb; border-top:1px solid #e5e7eb;"></td>
@@ -846,77 +819,63 @@
             });
         }
 
-        // CREATE AND SYNC STAFF ACCOUNTS INTO SUPABASE TABLE
         async function createNewDSEUser() {
             const nameEl = document.getElementById('add-name');
             const emailEl = document.getElementById('add-email');
             if (!nameEl.value || !emailEl.value) return alert("Please fill out complete profile information.");
 
-            toggleLoader(true);
             const newId = 'dse-' + Date.now();
-            const newStaffMember = { id: newId, name: nameEl.value, email: emailEl.value };
+            const newProfile = { id: newId, name: nameEl.value, email: emailEl.value };
 
-            try {
-                let { error } = await supabase.from('dse_staff').insert([newStaffMember]);
-                if (error) throw error;
-
-                db.staff.push(newStaffMember);
-                
-                nameEl.value = '';
-                emailEl.value = '';
-                repopulateDseDropdownSelectors();
-                renderStaffProfilesDirectory();
-            } catch (err) {
-                console.error("Failed creating new user on Supabase:", err);
-                alert("Error writing account data to remote storage database.");
-            } finally {
-                toggleLoader(false);
+            if (isUsingSupabase) {
+                try {
+                    const { error } = await _supabase.from('staff_profiles').insert(newProfile);
+                    if (error) throw error;
+                } catch (err) {
+                    console.error(err);
+                    return alert("Failed writing new record to database profile schemas.");
+                }
             }
-        }
 
-        // REMOVE STAFF PROFILES FROM SUPABASE TABLE
-        async function deleteDSEAccount(id) {
-            if (!confirm("Are you sure you want to remove this staff profile?")) return;
+            db.staff.push(newProfile);
+            if(!isUsingSupabase) localStorage.setItem('dse_staff', JSON.stringify(db.staff));
             
-            toggleLoader(true);
-            try {
-                let { error } = await supabase.from('dse_staff').delete().eq('id', id);
-                if (error) throw error;
+            nameEl.value = '';
+            emailEl.value = '';
+            repopulateDseDropdownSelectors();
+            renderStaffProfilesDirectory();
+        }
 
+        async function deleteDSEAccount(id) {
+            if (confirm("Are you sure you want to remove this staff profile?")) {
+                if (isUsingSupabase) {
+                    try {
+                        const { error } = await _supabase.from('staff_profiles').delete().eq('id', id);
+                        if (error) throw error;
+                    } catch(e) {
+                        console.error(e);
+                        return alert("Failed executing row removal on cloud table schema.");
+                    }
+                }
+                
                 db.staff = db.staff.filter(m => m.id !== id);
+                if(!isUsingSupabase) {
+                    localStorage.setItem('dse_staff', JSON.stringify(db.staff));
+                } else {
+                    await syncDataFromSupabaseCloud();
+                }
+                
                 repopulateDseDropdownSelectors();
                 renderStaffProfilesDirectory();
                 loadActiveDataRecords();
-            } catch (err) {
-                console.error("Failed deleting user from Supabase:", err);
-                alert("Error removing account from remote storage database.");
-            } finally {
-                toggleLoader(false);
             }
         }
 
-        // UPDATE SYSTEM RULES POLICY TABLE INSIDE SUPABASE
-        async function modifyFinanceAccessRule(isChecked) {
-            toggleLoader(true);
-            try {
-                let { error } = await supabase
-                    .from('dse_rules')
-                    .upsert({ key: 'dse_rule_fin', value: isChecked.toString() }, { onConflict: 'key' });
-                
-                if (error) throw error;
-
-                db.financeAllowed = isChecked;
-                loadActiveDataRecords();
-            } catch (err) {
-                console.error("Failed mapping security rules state to cloud:", err);
-                alert("Could not update visibility rules on Supabase backend.");
-            } finally {
-                toggleLoader(false);
-            }
+        function modifyFinanceAccessRule(isChecked) {
+            db.financeAllowed = isChecked;
+            localStorage.setItem('dse_rule_fin', isChecked);
+            loadActiveDataRecords();
         }
-
-        // Boot Application Sync Engine
-        initAppEngine();
     </script>
 </body>
 </html>
