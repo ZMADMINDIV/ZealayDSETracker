@@ -337,7 +337,10 @@
         const SUPABASE_URL = "https://zgnkmqyfelgyzsuyecrr.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpnbmttcXlmZWxneXpzdXllY3JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5MTA3ODQsImV4cCI6MjA5NjQ4Njc4NH0.mHJ2kCdMChdtwYP2rEJ1dwqPrpVJQAMph6FeMD0z9Eo";
         
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+);
 
         const MATRIX_KEYS = ['enq_walk', 'enq_tel', 'enq_fld', 'enq_srv', 'enq_onl', 'bk_walk', 'bk_tel', 'bk_fld', 'bk_srv', 'bk_onl', 'ret_walk', 'ew_walk', 'gma_val', 'rsa_val', 'gear_val', 'fin_val'];
         
@@ -363,7 +366,7 @@
         }
 
         async function refreshLocalStaffCache() {
-            const { data, error } = await supabase.from('showroom_staff').select('*');
+            const { data, error } = await supabaseClient.from('showroom_staff').select('*');
             if (!error && data) {
                 state.staff = data;
                 repopulateDseDropdownUiElements();
@@ -477,12 +480,12 @@
 
             // Fetch Today's Record
             const targetKey = `${dseId}_${targetDate}`;
-            const { data: dayData } = await supabase.from('showroom_records').select('metrics').eq('record_key', targetKey).maybeSingle();
+            const { data: dayData } = await supabaseClient.from('showroom_records').select('metrics').eq('record_key', targetKey).maybeSingle();
             state.dseView.inputData = dayData ? dayData.metrics : {};
 
             // Fetch Month to Date Baseline Logs (excluding today)
             const currentMonthPrefix = targetDate.substring(0, 7); // e.g. "2026-06"
-            const { data: monthLogs } = await supabase.from('showroom_records')
+            const { data: monthLogs } = await supabaseClient.from('showroom_records')
                 .select('metrics')
                 .eq('dse_id', dseId)
                 .neq('record_key', targetKey)
@@ -565,7 +568,7 @@
 
             const targetKey = `${dseId}_${targetDate}`;
             
-            const { error } = await supabase.from('showroom_records').upsert({
+            const { error } = await supabaseClient.from('showroom_records').upsert({
                 record_key: targetKey,
                 dse_id: dseId,
                 record_date: targetDate,
@@ -612,7 +615,7 @@
             const currentMonthPrefix = targetDate.substring(0, 7);
 
             // Fetch records for all staff for the current month up to the selected date
-            const { data: allRecords } = await supabase.from('showroom_records')
+            const { data: allRecords } = await supabaseClient.from('showroom_records')
                 .select('*')
                 .ilike('record_key', `%_${currentMonthPrefix}%`);
 
@@ -870,7 +873,7 @@
 
             const generatedId = `dse-${Date.now()}`;
 
-            const { error } = await supabase.from('showroom_staff').insert({
+            const { error } = await supabaseClient.from('showroom_staff').insert({
                 id: generatedId,
                 name: nameEl.value,
                 email: emailEl.value
@@ -888,7 +891,7 @@
         async function deleteDSEAccount(id) {
             if (!confirm("Are you sure you want to delete this profile from Supabase?")) return;
             
-            const { error } = await supabase.from('showroom_staff').delete().eq('id', id);
+            const { error } = await supabaseClient.from('showroom_staff').delete().eq('id', id);
 
             if (!error) {
                 await renderStaffProfilesDirectory();
