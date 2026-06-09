@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DSE Live Performance Tracker & Manager Panel</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
         body { background-color: #f3f4f6; color: #1f2937; margin: 0; padding: 0; }
@@ -59,7 +60,7 @@
         .table-container { width: 100%; overflow-x: auto; background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; margin-bottom: 24px; }
         table { width: 100%; border-collapse: collapse; text-align: left; min-width: 1000px; font-size: 0.875rem; }
         th { background: #1f2937; color: white; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; padding: 10px 6px; text-align: center; border: 1px solid #374151; }
-        th.sub-head { background: #4b5563; border-color: #4b5563; font-size: 0.7rem; }
+        th.sub-head { background: #4b5563; border-color: #4b5563; font-size: 0.7r; }
         td { padding: 6px; border: 1px solid #e5e7eb; font-weight: 500; text-align: center; }
         
         td.row-label { background: #f9fafb; font-weight: 700; color: #374151; text-align: left; padding-left: 14px; width: 160px; }
@@ -96,7 +97,6 @@
 </head>
 <body>
 
-    <!-- ==================== AUTHENTICATION PANEL ==================== -->
     <div id="panel-auth" class="auth-wrapper">
         <div class="auth-card">
             <div class="auth-header">
@@ -124,16 +124,14 @@
         </div>
     </div>
 
-    <!-- ==================== MAIN SYSTEMS FRAMEWORK CONTAINER ==================== -->
     <div id="panel-workspace" class="container hidden">
         
-        <!-- HEADER TOPPERS -->
         <header>
             <div class="logo-group">
                 <div class="logo">DSE</div>
                 <div class="title">
                     <h1>Performance Matrix Control System</h1>
-                    <p>Live Database Synchronized Enterprise Core</p>
+                    <p>Live Supabase Cloud Database Connected</p>
                 </div>
             </div>
             <div class="controls">
@@ -144,7 +142,6 @@
             </div>
         </header>
 
-        <!-- ==================== PANEL VIEW: DSE INPUT MATRIX ==================== -->
         <div id="panel-dse" class="view-panel hidden">
             <div class="card flex-bar">
                 <div class="inputs-group">
@@ -162,7 +159,6 @@
                 </div>
             </div>
 
-            <!-- Rectification Alert Flag Banner -->
             <div id="manager-edit-banner" class="banner banner-warning hidden">
                 <div>
                     <strong>🔒 MANAGER RECTIFICATION MODE:</strong> You are directly modifying historical database records. Saving here updates the global cluster instantly.
@@ -170,7 +166,6 @@
                 <button class="btn" style="padding: 4px 12px; font-size: 0.75rem;" onclick="exitRectificationMode()">Return to Manager Dashboard</button>
             </div>
 
-            <!-- EXCEL REPLICATED INPUT GRID SYSTEM -->
             <div class="table-container">
                 <table>
                     <thead>
@@ -194,7 +189,6 @@
                         </tr>
                     </thead>
                     <tbody id="matrix-body-inputs">
-                        <!-- WALK-IN -->
                         <tr>
                             <td class="row-label">WALK-IN</td>
                             <td><input type="number" id="in-enq_walk" min="0" value="0" oninput="pushInputValueToState('enq_walk', this.value)"></td>
@@ -207,7 +201,6 @@
                             <td><input type="number" id="in-ew_walk" min="0" value="0" oninput="pushInputValueToState('ew_walk', this.value)"></td>
                             <td class="mtd-cell" id="mtd-ew_walk">0</td>
                         </tr>
-                        <!-- TELEPHONIC -->
                         <tr>
                             <td class="row-label">TELEPHONIC</td>
                             <td><input type="number" id="in-enq_tel" min="0" value="0" oninput="pushInputValueToState('enq_tel', this.value)"></td>
@@ -219,7 +212,6 @@
                             <td class="highlight-lbl">EW %</td>
                             <td class="highlight-val" id="lbl-ew-pct">0.0%</td>
                         </tr>
-                        <!-- FIELD -->
                         <tr>
                             <td class="row-label">FIELD</td>
                             <td><input type="number" id="in-enq_fld" min="0" value="0" oninput="pushInputValueToState('enq_fld', this.value)"></td>
@@ -230,7 +222,6 @@
                             <td colspan="2" style="background:#f3f4f6; font-size:0.75rem; font-weight:700; color:#6b7280;">GMA</td>
                             <td colspan="2" style="background:#f3f4f6; font-size:0.75rem; font-weight:700; color:#6b7280;">RSA</td>
                         </tr>
-                        <!-- SERVICE REF -->
                         <tr>
                             <td class="row-label">SERVICE REF</td>
                             <td><input type="number" id="in-enq_srv" min="0" value="0" oninput="pushInputValueToState('enq_srv', this.value)"></td>
@@ -243,7 +234,6 @@
                             <td class="mtd-cell" style="font-size: 0.7rem; color:#9ca3af;">TODAY</td>
                             <td class="mtd-cell" style="font-size: 0.7rem; color:#9ca3af;">MONTH</td>
                         </tr>
-                        <!-- ONLINE -->
                         <tr>
                             <td class="row-label">ONLINE</td>
                             <td><input type="number" id="in-enq_onl" min="0" value="0" oninput="pushInputValueToState('enq_onl', this.value)"></td>
@@ -256,7 +246,6 @@
                             <td><input type="number" id="in-rsa_val" min="0" value="0" oninput="pushInputValueToState('rsa_val', this.value)"></td>
                             <td class="mtd-cell" id="mtd-rsa_val">0</td>
                         </tr>
-                        <!-- SUMMATION DATA MAP ROWS -->
                         <tr class="total-row">
                             <td style="text-align:left; padding-left:14px;">TOTAL</td>
                             <td id="tot-enq-tod">0</td>
@@ -269,7 +258,6 @@
                             <td class="highlight-lbl">RSA %</td>
                             <td class="highlight-val" id="lbl-rsa-pct">0.0%</td>
                         </tr>
-                        <!-- ANCILLARY SECTIONS -->
                         <tr class="finance-block">
                             <td colspan="6" rowspan="3" style="background:#e5e7eb;"></td>
                             <td colspan="2" style="background:#f3f4f6; font-size:0.75rem; font-weight:700; color:#6b7280;">GEAR</td>
@@ -299,15 +287,12 @@
             </div>
         </div>
 
-        <!-- ==================== PANEL VIEW: MANAGER SWITCHBOARD ==================== -->
         <div id="panel-manager" class="view-panel hidden">
             <div class="tabs">
                 <button class="tab-btn active" id="tab-link-perf" onclick="toggleManagerTabs('perf')">Team Performance Dashboard</button>
                 <button class="tab-btn" id="tab-link-staff" onclick="toggleManagerTabs('staff')">Manage Staff Directory</button>
-                <button class="tab-btn" id="tab-link-rules" onclick="toggleManagerTabs('rules')">Visibility Policies</button>
             </div>
 
-            <!-- Tab A: Performance Metric Control Mapping Overview -->
             <div id="view-sub-perf" class="sub-panel">
                 <div class="card flex-bar" style="margin-bottom: 24px;">
                     <div>
@@ -320,13 +305,10 @@
                     </div>
                 </div>
                 
-                <!-- Aggregated Showroom Core Output Placement -->
                 <div id="manager-final-summary-container"></div>
-                <!-- Independent DSE Output Cards -->
                 <div id="manager-matrix-reports-container"></div>
             </div>
 
-            <!-- Tab B: Active Staffing Registries -->
             <div id="view-sub-staff" class="sub-panel hidden">
                 <div class="grid-split">
                     <div class="card">
@@ -347,26 +329,16 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Tab C: Permissions and Data Visibility Policies -->
-            <div id="view-sub-rules" class="sub-panel hidden" style="max-width:650px;">
-                <div class="card">
-                    <h3 style="margin-top:0; font-size:1rem;">DSE Security Mapping Parameters</h3>
-                    <p style="font-size:0.75rem; color:#6b7280; margin-bottom:16px;">Control configuration states across terminal client views layout parameters dynamically.</p>
-                    <div style="padding:14px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; display:flex; gap:12px; align-items:flex-start;">
-                        <input type="checkbox" id="checkbox-rule-finance" onchange="modifyFinanceAccessRule(this.checked)" style="width:16px; height:16px; margin-top:3px;">
-                        <div>
-                            <span style="display:block; font-weight:700; font-size:0.85rem;">Expose Access to In-House Finance & Gear Metrics</span>
-                            <span style="display:block; font-size:0.75rem; color:#6b7280; margin-top:2px;">When turned off, financial row layouts are stripped completely from default DSE view lines.</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 
-    <!-- ==================== LOGICAL EXECUTION SYSTEMS CORE ==================== -->
     <script>
+        // CRITICAL: Replace these configuration keys with your real database credentials
+        const SUPABASE_URL = "https://zgnkmqyfelgyzsuyecrr.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpnbmttcXlmZWxneXpzdXllY3JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5MTA3ODQsImV4cCI6MjA5NjQ4Njc4NH0.mHJ2kCdMChdtwYP2rEJ1dwqPrpVJQAMph6FeMD0z9Eo";
+        
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
         const MATRIX_KEYS = ['enq_walk', 'enq_tel', 'enq_fld', 'enq_srv', 'enq_onl', 'bk_walk', 'bk_tel', 'bk_fld', 'bk_srv', 'bk_onl', 'ret_walk', 'ew_walk', 'gma_val', 'rsa_val', 'gear_val', 'fin_val'];
         
         let state = {
@@ -377,148 +349,6 @@
             managerView: { selectedDate: '' }
         };
 
-        // Initialize persistent database mapping configuration inside browser storage engine
-        function getStorageDatabase() {
-            let db = localStorage.getItem('showroom_persistent_db');
-            if (!db) {
-                const defaultDb = {
-                    staff: [
-                        { id: "dse-1", name: "Aniket Sharma", email: "aniket@showroom.com" },
-                        { id: "dse-2", name: "Priya Patel", email: "priya@showroom.com" },
-                        { id: "dse-3", name: "Rajesh Kumar", email: "rajesh@showroom.com" }
-                    ],
-                    records: {}, 
-                    rules: { financeAllowed: true }
-                };
-                localStorage.setItem('showroom_persistent_db', JSON.stringify(defaultDb));
-                return defaultDb;
-            }
-            return JSON.parse(db);
-        }
-
-        function writeStorageDatabase(data) {
-            localStorage.setItem('showroom_persistent_db', JSON.stringify(data));
-        }
-
-        // RE-ENGINEERED SYNC CONTROL: Stripped URL instances causing path parsing crashes completely
-        async function apiRequest(endpoint, options = {}) {
-            const localDBMock = getStorageDatabase();
-            
-            if (endpoint.startsWith('/staff/add')) {
-                const body = JSON.parse(options.body);
-                const newEmp = { id: `dse-${Date.now()}`, name: body.name, email: body.email };
-                localDBMock.staff.push(newEmp);
-                writeStorageDatabase(localDBMock);
-                return { success: true, data: newEmp };
-            }
-            
-            if (endpoint.startsWith('/staff/remove')) {
-                const body = JSON.parse(options.body);
-                localDBMock.staff = localDBMock.staff.filter(s => s.id !== body.id);
-                writeStorageDatabase(localDBMock);
-                return { success: true };
-            }
-            
-            if (endpoint.startsWith('/staff')) {
-                return { success: true, data: localDBMock.staff };
-            }
-            
-            if (endpoint.startsWith('/rules/finance')) {
-                if (options.method === 'POST') {
-                    localDBMock.rules.financeAllowed = JSON.parse(options.body).allowed;
-                    writeStorageDatabase(localDBMock);
-                    return { success: true };
-                }
-                return { success: true, allowed: localDBMock.rules.financeAllowed };
-            }
-            
-            if (endpoint.startsWith('/records/day')) {
-                const urlParams = new URLSearchParams(endpoint.split('?')[1]);
-                const dseId = urlParams.get('dseId');
-                const date = urlParams.get('date');
-                const key = `${dseId}_${date}`;
-                return { success: true, data: localDBMock.records[key] || {} };
-            }
-            
-            if (endpoint.startsWith('/records/mtd-baseline')) {
-                const urlParams = new URLSearchParams(endpoint.split('?')[1]);
-                const dseId = urlParams.get('dseId');
-                const targetDate = urlParams.get('date');
-                const prefix = `${dseId}_${targetDate.substring(0, 7)}`; 
-                
-                let baselineTotals = {};
-                MATRIX_KEYS.forEach(k => baselineTotals[k] = 0);
-
-                Object.keys(localDBMock.records).forEach(key => {
-                    if (key.startsWith(prefix) && key !== `${dseId}_${targetDate}`) {
-                        const rec = localDBMock.records[key];
-                        MATRIX_KEYS.forEach(k => { baselineTotals[k] += (rec[k] || 0); });
-                    }
-                });
-                return { success: true, data: baselineTotals };
-            }
-            
-            if (endpoint.startsWith('/records/save')) {
-                const body = JSON.parse(options.body);
-                const key = `${body.dseId}_${body.date}`;
-                localDBMock.records[key] = { ...body.metrics };
-                writeStorageDatabase(localDBMock);
-                return { success: true };
-            }
-            
-            if (endpoint.startsWith('/records/dashboard-matrix')) {
-                const urlParams = new URLSearchParams(endpoint.split('?')[1]);
-                const targetDate = urlParams.get('date');
-                let reports = [];
-                let aggregatedToday = {};
-                let aggregatedMtd = {};
-                
-                MATRIX_KEYS.forEach(k => { aggregatedToday[k] = 0; aggregatedMtd[k] = 0; });
-                let globalRetailMtd = 0;
-
-                localDBMock.staff.forEach(emp => {
-                    const dayKey = `${emp.id}_${targetDate}`;
-                    const todayData = localDBMock.records[dayKey] || {};
-                    let normalizedToday = {};
-                    MATRIX_KEYS.forEach(k => normalizedToday[k] = todayData[k] || 0);
-
-                    const prefix = `${emp.id}_${targetDate.substring(0, 7)}`;
-                    let mtdData = {};
-                    MATRIX_KEYS.forEach(k => mtdData[k] = 0);
-
-                    Object.keys(localDBMock.records).forEach(key => {
-                        if (key.startsWith(prefix)) {
-                            const trackingDay = key.split('_')[1];
-                            if (trackingDay <= targetDate) {
-                                const rec = localDBMock.records[key];
-                                MATRIX_KEYS.forEach(k => { mtdData[k] += (rec[k] || 0); });
-                            }
-                        }
-                    });
-
-                    reports.push({
-                        id: emp.id, name: emp.name, email: emp.email,
-                        today: normalizedToday, mtd: mtdData, retailMtd: mtdData['ret_walk']
-                    });
-
-                    MATRIX_KEYS.forEach(k => {
-                        aggregatedToday[k] += normalizedToday[k];
-                        aggregatedMtd[k] += mtdData[k];
-                    });
-                    globalRetailMtd += mtdData['ret_walk'];
-                });
-
-                return {
-                    success: true,
-                    data: {
-                        individualReports: reports,
-                        consolidatedSummary: { today: aggregatedToday, mtd: aggregatedMtd, retailMtd: globalRetailMtd }
-                    }
-                };
-            }
-            return { success: false, error: 'Endpoint error mapping data profiles' };
-        }
-
         // ==================== ENGINE FRAMEWORK MANAGEMENT ====================
         async function initAppEngine() {
             const todayStr = new Date().toISOString().split('T')[0];
@@ -528,15 +358,16 @@
             document.getElementById('selector-target-date').value = todayStr;
             document.getElementById('manager-date-view').value = todayStr;
 
-            const staffRes = await apiRequest('/staff');
-            state.staff = staffRes.success ? staffRes.data : [];
-            
-            const ruleRes = await apiRequest('/rules/finance');
-            state.rules.financeAllowed = ruleRes.success ? ruleRes.allowed : true;
-            document.getElementById('checkbox-rule-finance').checked = state.rules.financeAllowed;
-
-            repopulateDseDropdownUiElements();
+            await refreshLocalStaffCache();
             handleAuthRoleChange('DSE');
+        }
+
+        async function refreshLocalStaffCache() {
+            const { data, error } = await supabase.from('showroom_staff').select('*');
+            if (!error && data) {
+                state.staff = data;
+                repopulateDseDropdownUiElements();
+            }
         }
 
         function handleAuthRoleChange(role) {
@@ -626,7 +457,7 @@
             });
         }
 
-        // ==================== INDUSTRIAL FORM METRIC PIPELINES ====================
+        // ==================== METRIC FORM READ/WRITE TO SUPABASE ====================
         function syncSelectedDseWithState(dseId) {
             state.dseView.activeDseId = dseId;
             document.getElementById('selector-active-dse').value = dseId;
@@ -644,18 +475,28 @@
             const targetDate = state.dseView.selectedDate;
             if(!dseId || !targetDate) return;
 
-            const [dayRecordRes, mtdRes] = await Promise.all([
-                apiRequest(`/records/day?dseId=${dseId}&date=${targetDate}`),
-                apiRequest(`/records/mtd-baseline?dseId=${dseId}&date=${targetDate}`)
-            ]);
+            // Fetch Today's Record
+            const targetKey = `${dseId}_${targetDate}`;
+            const { data: dayData } = await supabase.from('showroom_records').select('metrics').eq('record_key', targetKey).maybeSingle();
+            state.dseView.inputData = dayData ? dayData.metrics : {};
 
-            state.dseView.inputData = dayRecordRes.success ? dayRecordRes.data : {};
-            state.dseView.baselineMtd = mtdRes.success ? mtdRes.data : {};
+            // Fetch Month to Date Baseline Logs (excluding today)
+            const currentMonthPrefix = targetDate.substring(0, 7); // e.g. "2026-06"
+            const { data: monthLogs } = await supabase.from('showroom_records')
+                .select('metrics')
+                .eq('dse_id', dseId)
+                .neq('record_key', targetKey)
+                .ilike('record_key', `${dseId}_${currentMonthPrefix}%`);
 
-            document.querySelectorAll('.finance-block').forEach(el => {
-                if (state.rules.financeAllowed) el.classList.remove('hidden');
-                else el.classList.add('hidden');
-            });
+            let baselineTotals = {};
+            MATRIX_KEYS.forEach(k => baselineTotals[k] = 0);
+            
+            if (monthLogs) {
+                monthLogs.forEach(row => {
+                    MATRIX_KEYS.forEach(k => { baselineTotals[k] += (row.metrics[k] || 0); });
+                });
+            }
+            state.dseView.baselineMtd = baselineTotals;
 
             renderStateDataIntoFormFields();
         }
@@ -722,18 +563,24 @@
             let dayPayload = {};
             MATRIX_KEYS.forEach(k => { dayPayload[k] = state.dseView.inputData[k] || 0; });
 
-            const saveRes = await apiRequest('/records/save', {
-                method: 'POST',
-                body: { dseId, date: targetDate, metrics: dayPayload }
+            const targetKey = `${dseId}_${targetDate}`;
+            
+            const { error } = await supabase.from('showroom_records').upsert({
+                record_key: targetKey,
+                dse_id: dseId,
+                record_date: targetDate,
+                metrics: dayPayload
             });
 
-            if (saveRes.success) {
-                alert("Performance matrix variables written and synced safely.");
+            if (!error) {
+                alert("Performance matrix written and synced to Supabase safely.");
                 if (!document.getElementById('manager-edit-banner').classList.contains('hidden')) {
                     exitRectificationMode();
                 } else {
                     loadTargetGridDataFromDb();
                 }
+            } else {
+                alert("Error writing to cloud database: " + error.message);
             }
         }
 
@@ -758,25 +605,63 @@
         async function renderManagerDashboardMetrics() {
             const reportsContainer = document.getElementById('manager-matrix-reports-container');
             const summaryContainer = document.getElementById('manager-final-summary-container');
-            reportsContainer.innerHTML = '<p style="padding:16px; color:#6b7280;">Fetching real-time team logs...</p>';
+            reportsContainer.innerHTML = '<p style="padding:16px; color:#6b7280;">Fetching live cloud database team logs...</p>';
             summaryContainer.innerHTML = '';
             
             const targetDate = state.managerView.selectedDate;
-            const dashDataRes = await apiRequest(`/records/dashboard-matrix?date=${targetDate}`);
-            
-            if (!dashDataRes.success) return;
+            const currentMonthPrefix = targetDate.substring(0, 7);
+
+            // Fetch records for all staff for the current month up to the selected date
+            const { data: allRecords } = await supabase.from('showroom_records')
+                .select('*')
+                .ilike('record_key', `%_${currentMonthPrefix}%`);
+
+            let individualReports = [];
+            let aggregatedToday = {};
+            let aggregatedMtd = {};
+            MATRIX_KEYS.forEach(k => { aggregatedToday[k] = 0; aggregatedMtd[k] = 0; });
+            let globalRetailMtd = 0;
+
+            state.staff.forEach(emp => {
+                let normalizedToday = {};
+                let mtdData = {};
+                MATRIX_KEYS.forEach(k => { normalizedToday[k] = 0; mtdData[k] = 0; });
+
+                if (allRecords) {
+                    allRecords.forEach(rec => {
+                        if (rec.dse_id === emp.id) {
+                            if (rec.record_date === targetDate) {
+                                MATRIX_KEYS.forEach(k => normalizedToday[k] = rec.metrics[k] || 0);
+                            }
+                            if (rec.record_date <= targetDate) {
+                                MATRIX_KEYS.forEach(k => mtdData[k] += (rec.metrics[k] || 0));
+                            }
+                        }
+                    });
+                }
+
+                individualReports.push({
+                    id: emp.id, name: emp.name, email: emp.email,
+                    today: normalizedToday, mtd: mtdData, retailMtd: mtdData['ret_walk']
+                });
+
+                MATRIX_KEYS.forEach(k => {
+                    aggregatedToday[k] += normalizedToday[k];
+                    aggregatedMtd[k] += mtdData[k];
+                });
+                globalRetailMtd += mtdData['ret_walk'];
+            });
 
             reportsContainer.innerHTML = '';
-            const { individualReports, consolidatedSummary } = dashDataRes.data;
 
             const summaryDiv = document.createElement('div');
             summaryDiv.className = 'dse-report-block summary-block';
             summaryDiv.innerHTML = createManagerReportGridHtml(
                 "⭐ CUMULATIVE SHOWROOM TOTAL SUMMARY", 
-                `Consolidated Operations Across All Active Staff Rows`, 
-                consolidatedSummary.today, 
-                (k) => consolidatedSummary.mtd[k], 
-                consolidatedSummary.retailMtd, 
+                `Consolidated Operations Across All Active Cloud Clusters`, 
+                aggregatedToday, 
+                (k) => aggregatedMtd[k], 
+                globalRetailMtd, 
                 true, ''
             );
             summaryContainer.appendChild(summaryDiv);
@@ -902,24 +787,24 @@
                                 <td class="highlight-lbl">RSA %</td>
                                 <td class="highlight-val">${calcPen(getMtd('rsa_val'), retailMtd)}</td>
                             </tr>
-                            <tr class="${state.rules.financeAllowed ? '' : 'hidden'}">
+                            <tr>
                                 <td colspan="6" rowspan="3" style="background:#e5e7eb;"></td>
                                 <td colspan="2" style="background:#f3f4f6; font-size:0.75rem; font-weight:700; color:#6b7280;">GEAR</td>
                                 <td colspan="2" style="background:#f3f4f6; font-size:0.75rem; font-weight:700; color:#6b7280;">IN HOUSE FINANCE</td>
                             </tr>
-                            <tr class="${state.rules.financeAllowed ? '' : 'hidden'}">
+                            <tr>
                                 <td class="mtd-cell" style="font-size: 0.7rem; color:#9ca3af;">TODAY</td>
                                 <td class="mtd-cell" style="font-size: 0.7rem; color:#9ca3af;">MONTH</td>
                                 <td class="mtd-cell" style="font-size: 0.7rem; color:#9ca3af;">TODAY</td>
                                 <td class="mtd-cell" style="font-size: 0.7rem; color:#9ca3af;">MONTH</td>
                             </tr>
-                            <tr class="${state.rules.financeAllowed ? '' : 'hidden'}">
+                            <tr>
                                 <td><strong>${today.gear_val}</strong></td>
                                 <td class="mtd-cell">${getMtd('gear_val')}</td>
                                 <td><strong>${today.fin_val}</strong></td>
                                 <td class="mtd-cell">${getMtd('fin_val')}</td>
                             </tr>
-                            <tr class="${state.rules.financeAllowed ? '' : 'hidden'}">
+                            <tr>
                                 <td colspan="6" style="background:#e5e7eb; border-top:1px solid #e5e7eb;"></td>
                                 <td class="highlight-lbl">GEAR PBA</td>
                                 <td class="highlight-val">${retailMtd > 0 ? Math.round(getMtd('gear_val') / retailMtd) : 0}</td>
@@ -959,12 +844,9 @@
         // ==================== MANAGER DIRECTORY CONTROL PARAMS ====================
         async function renderStaffProfilesDirectory() {
             const container = document.getElementById('manager-staff-list-container');
-            container.innerHTML = '<p style="color:#6b7280;">Loading active registries...</p>';
+            container.innerHTML = '<p style="color:#6b7280;">Loading live registries...</p>';
             
-            const res = await apiRequest('/staff');
-            if(!res.success) return;
-            
-            state.staff = res.data;
+            await refreshLocalStaffCache();
             container.innerHTML = '';
             
             state.staff.forEach(member => {
@@ -979,7 +861,6 @@
                 `;
                 container.appendChild(div);
             });
-            repopulateDseDropdownUiElements();
         }
 
         async function createNewDSEUser() {
@@ -987,38 +868,32 @@
             const emailEl = document.getElementById('add-email');
             if (!nameEl.value || !emailEl.value) return alert("Please input proper structural profile elements.");
 
-            const res = await apiRequest('/staff/add', {
-                method: 'POST',
-                body: { name: nameEl.value, email: emailEl.value }
+            const generatedId = `dse-${Date.now()}`;
+
+            const { error } = await supabase.from('showroom_staff').insert({
+                id: generatedId,
+                name: nameEl.value,
+                email: emailEl.value
             });
 
-            if (res.success) {
+            if (!error) {
                 nameEl.value = '';
                 emailEl.value = '';
                 await renderStaffProfilesDirectory();
+            } else {
+                alert("Database insert failed: " + error.message);
             }
         }
 
         async function deleteDSEAccount(id) {
-            if (!confirm("Are you sure you want to delete this profile?")) return;
+            if (!confirm("Are you sure you want to delete this profile from Supabase?")) return;
             
-            const res = await apiRequest(`/staff/remove`, {
-                method: 'DELETE',
-                body: { id }
-            });
+            const { error } = await supabase.from('showroom_staff').delete().eq('id', id);
 
-            if (res.success) {
+            if (!error) {
                 await renderStaffProfilesDirectory();
-            }
-        }
-
-        async function modifyFinanceAccessRule(isChecked) {
-            const res = await apiRequest('/rules/finance', {
-                method: 'POST',
-                body: { allowed: isChecked }
-            });
-            if (res.success) {
-                state.rules.financeAllowed = isChecked;
+            } else {
+                alert("Error deleting record: " + error.message);
             }
         }
 
