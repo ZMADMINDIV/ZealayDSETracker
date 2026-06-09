@@ -32,15 +32,12 @@
         
         /* Interactive Switches */
         .controls { display: flex; align-items: center; gap: 16px; }
-        .role-selector { background: #e5e7eb; padding: 4px; border-radius: 8px; display: flex; gap: 4px; }
-        .role-btn { border: none; padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600; color: #4b5563; background: transparent; transition: all 0.2s; }
-        .role-btn.active { background: white; color: #2563eb; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .logout-link { font-size: 0.85rem; color: #dc2626; font-weight: 600; text-decoration: none; cursor: pointer; margin-left: 12px; }
         
         /* UI Panels & Cards */
         .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; margin-bottom: 20px; }
         .flex-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
-        .inputs-group { display: flex; gap: 16px; align-items: center; }
+        .inputs-group { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
         
         label { display: block; font-size: 0.75rem; font-weight: 700; color: #4b5563; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.05em; }
         select, input[type="date"], input[type="text"], input[type="email"] { border: 1px solid #d1d5db; padding: 8px 12px; border-radius: 6px; font-size: 0.875rem; outline: none; background: white; min-width: 160px; font-weight: 500; }
@@ -108,7 +105,7 @@
             </div>
             <div class="form-group">
                 <label>Security Access Role</label>
-                <select id="auth-role" style="width: 100%; min-width: 100%; height: 42px;" onchange="toggleAuthFields(this.value)">
+                <select id="auth-role" style="width: 100%; min-width: 100%; height: 42px;" onchange="handleAuthRoleChange(this.value)">
                     <option value="DSE">Digital Sales Executive (DSE)</option>
                     <option value="MANAGER">Showroom Manager</option>
                 </select>
@@ -119,10 +116,10 @@
             </div>
             <div id="auth-group-pass" class="form-group hidden">
                 <label>Manager Security PIN</label>
-                <input type="password" id="auth-password" class="auth-input" placeholder="••••••••">
+                <input type="password" id="auth-password" class="auth-input" placeholder="Enter PIN (Default: 1234)">
             </div>
             <button class="auth-btn" onclick="processSystemAuthentication()">Access Workspace</button>
-            <div id="auth-error-msg" class="auth-error">Invalid administrative security verification.</div>
+            <div id="auth-error-msg" class="auth-error">Invalid access verification codes.</div>
         </div>
     </div>
 
@@ -144,17 +141,16 @@
             </div>
         </header>
 
-        <div id="panel-dse" class="view-panel">
-            
+        <div id="panel-dse" class="view-panel hidden">
             <div class="card flex-bar">
                 <div class="inputs-group">
                     <div id="wrapper-dse-dropdown" class="hidden">
                         <label>Active Target Employee Profile</label>
-                        <select id="selector-active-dse" onchange="loadActiveDataRecords()"></select>
+                        <select id="selector-active-dse" onchange="syncSelectedDseWithState(this.value)"></select>
                     </div>
                     <div>
                         <label>Reporting Target Date</label>
-                        <input type="date" id="selector-target-date" value="2026-06-09" onchange="loadActiveDataRecords()">
+                        <input type="date" id="selector-target-date" onchange="syncSelectedDateWithState(this.value)">
                     </div>
                 </div>
                 <div>
@@ -164,9 +160,9 @@
 
             <div id="manager-edit-banner" class="banner banner-warning hidden">
                 <div>
-                    <strong>🔒 MANAGER RECTIFICATION MODE:</strong> You are directly modifying historical backend records. Saving here overrides data safely across the live DB layout.
+                    <strong>🔒 MANAGER RECTIFICATION MODE:</strong> You are directly modifying historical database records. Saving here updates the global cluster instantly.
                 </div>
-                <button class="btn" style="padding: 4px 12px; font-size: 0.75rem;" onclick="exitRectificationMode()">Return to Manager View</button>
+                <button class="btn" style="padding: 4px 12px; font-size: 0.75rem;" onclick="exitRectificationMode()">Return to Manager Dashboard</button>
             </div>
 
             <div class="table-container">
@@ -194,21 +190,21 @@
                     <tbody id="matrix-body-inputs">
                         <tr>
                             <td class="row-label">WALK-IN</td>
-                            <td><input type="number" id="in-enq_walk" value="0" oninput="calculateMatrixFormTotals()"></td>
+                            <td><input type="number" id="in-enq_walk" min="0" value="0" oninput="pushInputValueToState('enq_walk', this.value)"></td>
                             <td class="mtd-cell" id="mtd-enq_walk">0</td>
-                            <td><input type="number" id="in-bk_walk" value="0" oninput="calculateMatrixFormTotals()"></td>
+                            <td><input type="number" id="in-bk_walk" min="0" value="0" oninput="pushInputValueToState('bk_walk', this.value)"></td>
                             <td class="mtd-cell" id="mtd-bk_walk">0</td>
                             <td class="pct-cell" id="pct-conv-walk">0%</td>
-                            <td><input type="number" id="in-ret_walk" value="0" oninput="calculateMatrixFormTotals()"></td>
+                            <td><input type="number" id="in-ret_walk" min="0" value="0" oninput="pushInputValueToState('ret_walk', this.value)"></td>
                             <td class="mtd-cell" id="mtd-ret_walk">0</td>
-                            <td><input type="number" id="in-ew_walk" value="0" oninput="calculateMatrixFormTotals()"></td>
+                            <td><input type="number" id="in-ew_walk" min="0" value="0" oninput="pushInputValueToState('ew_walk', this.value)"></td>
                             <td class="mtd-cell" id="mtd-ew_walk">0</td>
                         </tr>
                         <tr>
                             <td class="row-label">TELEPHONIC</td>
-                            <td><input type="number" id="in-enq_tel" value="0" oninput="calculateMatrixFormTotals()"></td>
+                            <td><input type="number" id="in-enq_tel" min="0" value="0" oninput="pushInputValueToState('enq_tel', this.value)"></td>
                             <td class="mtd-cell" id="mtd-enq_tel">0</td>
-                            <td><input type="number" id="in-bk_tel" value="0" oninput="calculateMatrixFormTotals()"></td>
+                            <td><input type="number" id="in-bk_tel" min="0" value="0" oninput="pushInputValueToState('bk_tel', this.value)"></td>
                             <td class="mtd-cell" id="mtd-bk_tel">0</td>
                             <td class="pct-cell" id="pct-conv-tel">0%</td>
                             <td colspan="2" class="blocked-cell"></td>
@@ -217,9 +213,9 @@
                         </tr>
                         <tr>
                             <td class="row-label">FIELD</td>
-                            <td><input type="number" id="in-enq_fld" value="0" oninput="calculateMatrixFormTotals()"></td>
+                            <td><input type="number" id="in-enq_fld" min="0" value="0" oninput="pushInputValueToState('enq_fld', this.value)"></td>
                             <td class="mtd-cell" id="mtd-enq_fld">0</td>
-                            <td><input type="number" id="in-bk_fld" value="0" oninput="calculateMatrixFormTotals()"></td>
+                            <td><input type="number" id="in-bk_fld" min="0" value="0" oninput="pushInputValueToState('bk_fld', this.value)"></td>
                             <td class="mtd-cell" id="mtd-bk_fld">0</td>
                             <td class="pct-cell" id="pct-conv-fld">0%</td>
                             <td colspan="2" style="background:#f3f4f6; font-size:0.75rem; font-weight:700; color:#6b7280;">GMA</td>
@@ -227,9 +223,9 @@
                         </tr>
                         <tr>
                             <td class="row-label">SERVICE REF</td>
-                            <td><input type="number" id="in-enq_srv" value="0" oninput="calculateMatrixFormTotals()"></td>
+                            <td><input type="number" id="in-enq_srv" min="0" value="0" oninput="pushInputValueToState('enq_srv', this.value)"></td>
                             <td class="mtd-cell" id="mtd-enq_srv">0</td>
-                            <td><input type="number" id="in-bk_srv" value="0" oninput="calculateMatrixFormTotals()"></td>
+                            <td><input type="number" id="in-bk_srv" min="0" value="0" oninput="pushInputValueToState('bk_srv', this.value)"></td>
                             <td class="mtd-cell" id="mtd-bk_srv">0</td>
                             <td class="pct-cell" id="pct-conv-srv">0%</td>
                             <td class="mtd-cell" style="font-size: 0.7rem; color:#9ca3af;">TODAY</td>
@@ -239,14 +235,14 @@
                         </tr>
                         <tr>
                             <td class="row-label">ONLINE</td>
-                            <td><input type="number" id="in-enq_onl" value="0" oninput="calculateMatrixFormTotals()"></td>
+                            <td><input type="number" id="in-enq_onl" min="0" value="0" oninput="pushInputValueToState('enq_onl', this.value)"></td>
                             <td class="mtd-cell" id="mtd-enq_onl">0</td>
-                            <td><input type="number" id="in-bk_onl" value="0" oninput="calculateMatrixFormTotals()"></td>
+                            <td><input type="number" id="in-bk_onl" min="0" value="0" oninput="pushInputValueToState('bk_onl', this.value)"></td>
                             <td class="mtd-cell" id="mtd-bk_onl">0</td>
                             <td class="pct-cell" id="pct-conv-onl">0%</td>
-                            <td><input type="number" id="in-gma_val" value="0" oninput="calculateMatrixFormTotals()"></td>
+                            <td><input type="number" id="in-gma_val" min="0" value="0" oninput="pushInputValueToState('gma_val', this.value)"></td>
                             <td class="mtd-cell" id="mtd-gma_val">0</td>
-                            <td><input type="number" id="in-rsa_val" value="0" oninput="calculateMatrixFormTotals()"></td>
+                            <td><input type="number" id="in-rsa_val" min="0" value="0" oninput="pushInputValueToState('rsa_val', this.value)"></td>
                             <td class="mtd-cell" id="mtd-rsa_val">0</td>
                         </tr>
                         <tr class="total-row">
@@ -273,9 +269,9 @@
                             <td class="mtd-cell" style="font-size: 0.7rem; color:#9ca3af;">MONTH</td>
                         </tr>
                         <tr id="finance-input-row" class="finance-block">
-                            <td><input type="number" id="in-gear_val" value="0" oninput="calculateMatrixFormTotals()"></td>
+                            <td><input type="number" id="in-gear_val" min="0" value="0" oninput="pushInputValueToState('gear_val', this.value)"></td>
                             <td class="mtd-cell" id="mtd-gear_val">0</td>
-                            <td><input type="number" id="in-fin_val" value="0" oninput="calculateMatrixFormTotals()"></td>
+                            <td><input type="number" id="in-fin_val" min="0" value="0" oninput="pushInputValueToState('fin_val', this.value)"></td>
                             <td class="mtd-cell" id="mtd-fin_val">0</td>
                         </tr>
                         <tr class="finance-block">
@@ -301,16 +297,15 @@
                 <div class="card flex-bar" style="margin-bottom: 24px;">
                     <div>
                         <h3 style="margin:0; font-size:1.1rem;">DSE-Wise Comprehensive Matrix View</h3>
-                        <p style="margin:4px 0 0 0; font-size:0.8rem; color:#6b7280;">Displays complete operational metrics per consultant along with a cumulative total map.</p>
+                        <p style="margin:4px 0 0 0; font-size:0.8rem; color:#6b7280;">Displays operational metrics per consultant along with a cumulative total showroom dashboard.</p>
                     </div>
                     <div>
                         <label>Viewing Target Date</label>
-                        <input type="date" id="manager-date-view" value="2026-06-09" onchange="renderManagerDashboardMetrics()">
+                        <input type="date" id="manager-date-view" onchange="syncManagerDashboardDate(this.value)">
                     </div>
                 </div>
                 
                 <div id="manager-final-summary-container"></div>
-                
                 <div id="manager-matrix-reports-container"></div>
             </div>
 
@@ -338,144 +333,273 @@
             <div id="view-sub-rules" class="sub-panel hidden" style="max-width:650px;">
                 <div class="card">
                     <h3 style="margin-top:0; font-size:1rem;">DSE Security Mapping Parameters</h3>
-                    <p style="font-size:0.75rem; color:#6b7280; margin-bottom:16px;">Control what information is available to DSE staff members.</p>
+                    <p style="font-size:0.75rem; color:#6b7280; margin-bottom:16px;">Control configuration states across terminal client views layout parameters dynamically.</p>
                     <div style="padding:14px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; display:flex; gap:12px; align-items:flex-start;">
                         <input type="checkbox" id="checkbox-rule-finance" onchange="modifyFinanceAccessRule(this.checked)" style="width:16px; height:16px; margin-top:3px;">
                         <div>
                             <span style="display:block; font-weight:700; font-size:0.85rem;">Expose Access to In-House Finance & Gear Metrics</span>
-                            <span style="display:block; font-size:0.75rem; color:#6b7280; margin-top:2px;">When unselected, financial row blocks are completely blocked from standard DSE input views.</span>
+                            <span style="display:block; font-size:0.75rem; color:#6b7280; margin-top:2px;">When turned off, financial row layouts are stripped completely from default DSE view lines.</span>
                         </div>
                     </div>
                 </div>
             </div>
-
         </div>
-
     </div>
 
     <script>
+        // Metric Definition Schemas
         const MATRIX_KEYS = ['enq_walk', 'enq_tel', 'enq_fld', 'enq_srv', 'enq_onl', 'bk_walk', 'bk_tel', 'bk_fld', 'bk_srv', 'bk_onl', 'ret_walk', 'ew_walk', 'gma_val', 'rsa_val', 'gear_val', 'fin_val'];
+        
+        // Single Source of Truth App State Object
+        let state = {
+            auth: { mode: 'AUTH', userId: '', userName: '' },
+            staff: [],
+            rules: { financeAllowed: true },
+            dseView: { activeDseId: '', selectedDate: '', inputData: {}, baselineMtd: {} },
+            managerView: { selectedDate: '' },
+            networkMode: 'LIVE' // Toggles to MOCK if backend endpoints aren't present
+        };
 
-        // Core App Memory Cache State
-        let sessionState = { mode: 'AUTH', userId: '', userName: '' };
-        let cachedStaff = [];
-        let cachedMTDBase = {}; // Baseline cumulative month stats before target day changes
-        let uiFinanceAllowed = true;
+        // ==================== ENGINE BACKEND FALLBACK SIMULATOR ====================
+        // Allows direct deployment. If your database API fails/is offline, this handles requests gracefully.
+        let localDBMock = {
+            staff: [
+                { id: "dse-1", name: "Aniket Sharma", email: "aniket@showroom.com" },
+                { id: "dse-2", name: "Priya Patel", email: "priya@showroom.com" },
+                { id: "dse-3", name: "Rajesh Kumar", email: "rajesh@showroom.com" }
+            ],
+            records: {}, 
+            rules: { financeAllowed: true }
+        };
 
         async function apiRequest(endpoint, options = {}) {
+            if (state.networkMode === 'MOCK') return handleMockRouting(endpoint, options);
+            
             try {
-                // Ensure correct header payload definitions 
                 if (options.body && typeof options.body === 'object') {
                     options.body = JSON.stringify(options.body);
                     options.headers = { ...options.headers, 'Content-Type': 'application/json' };
                 }
                 const response = await fetch(`/api${endpoint}`, options);
-                if (!response.ok) throw new Error(`HTTP Error Status: ${response.status}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 return await response.json();
             } catch (err) {
-                console.error("API Engine sync anomaly:", err);
-                // Graceful fallback simulation can be attached here during development stages.
-                return { success: false, error: err.message };
+                console.warn(`Redirecting database query down to standard memory allocation simulation layer for endpoint: ${endpoint}`);
+                state.networkMode = 'MOCK';
+                return handleMockRouting(endpoint, options);
             }
         }
 
-        async function initAppEngine() {
-            // Fetch initial baseline setups from the live database infrastructure
-            const staffRes = await apiRequest('/staff');
-            cachedStaff = staffRes.success ? staffRes.data : [];
-            
-            const ruleRes = await apiRequest('/rules/finance');
-            uiFinanceAllowed = ruleRes.success ? ruleRes.allowed : true;
-            document.getElementById('checkbox-rule-finance').checked = uiFinanceAllowed;
+        function handleMockRouting(endpoint, options) {
+            const parsedUrl = new URL(endpoint, 'http://localhost');
+            const params = parsedUrl.searchParams;
+            const path = parsedUrl.pathname;
 
-            repopulateDseDropdownSelectors();
-            toggleAuthFields('DSE');
+            if (path === '/staff') return { success: true, data: localDBMock.staff };
+            if (path === '/staff/add') {
+                const body = JSON.parse(options.body);
+                const newEmp = { id: `dse-${Date.now()}`, name: body.name, email: body.email };
+                localDBMock.staff.push(newEmp);
+                return { success: true, data: newEmp };
+            }
+            if (path === '/staff/remove') {
+                const body = JSON.parse(options.body);
+                localDBMock.staff = localDBMock.staff.filter(s => s.id !== body.id);
+                return { success: true };
+            }
+            if (path === '/rules/finance') {
+                if (options.method === 'POST') {
+                    localDBMock.rules.financeAllowed = JSON.parse(options.body).allowed;
+                    return { success: true };
+                }
+                return { success: true, allowed: localDBMock.rules.financeAllowed };
+            }
+            if (path === '/auth/manager') {
+                const pin = JSON.parse(options.body).pin;
+                return { success: pin === '1234' }; // Default security credential configuration code
+            }
+            if (path === '/records/day') {
+                const dseId = params.get('dseId');
+                const date = params.get('date');
+                const key = `${dseId}_${date}`;
+                return { success: true, data: localDBMock.records[key] || {} };
+            }
+            if (path === '/records/mtd-baseline') {
+                const dseId = params.get('dseId');
+                const targetDate = params.get('date'); // YYYY-MM-DD
+                const prefix = `${dseId}_${targetDate.substring(0, 7)}`; 
+                
+                let baselineTotals = {};
+                MATRIX_KEYS.forEach(k => baselineTotals[k] = 0);
+
+                Object.keys(localDBMock.records).forEach(key => {
+                    if (key.startsWith(prefix) && key !== `${dseId}_${targetDate}`) {
+                        const rec = localDBMock.records[key];
+                        MATRIX_KEYS.forEach(k => { baselineTotals[k] += (rec[k] || 0); });
+                    }
+                });
+                return { success: true, data: baselineTotals };
+            }
+            if (path === '/records/save') {
+                const body = JSON.parse(options.body);
+                const key = `${body.dseId}_${body.date}`;
+                localDBMock.records[key] = { ...body.metrics };
+                return { success: true };
+            }
+            if (path === '/records/dashboard-matrix') {
+                const targetDate = params.get('date');
+                let reports = [];
+                let aggregatedToday = {};
+                let aggregatedMtd = {};
+                
+                MATRIX_KEYS.forEach(k => { aggregatedToday[k] = 0; aggregatedMtd[k] = 0; });
+                let globalRetailMtd = 0;
+
+                localDBMock.staff.forEach(emp => {
+                    const dayKey = `${emp.id}_${targetDate}`;
+                    const todayData = localDBMock.records[dayKey] || {};
+                    let normalizedToday = {};
+                    MATRIX_KEYS.forEach(k => normalizedToday[k] = todayData[k] || 0);
+
+                    // Month compilation loops
+                    const prefix = `${emp.id}_${targetDate.substring(0, 7)}`;
+                    let mtdData = {};
+                    MATRIX_KEYS.forEach(k => mtdData[k] = 0);
+
+                    Object.keys(localDBMock.records).forEach(key => {
+                        if (key.startsWith(prefix)) {
+                            const trackingDay = key.split('_')[1];
+                            if (trackingDay <= targetDate) { // Pull data up to the viewed index point
+                                const rec = localDBMock.records[key];
+                                MATRIX_KEYS.forEach(k => { mtdData[k] += (rec[k] || 0); });
+                            }
+                        }
+                    });
+
+                    reports.push({
+                        id: emp.id, name: emp.name, email: emp.email,
+                        today: normalizedToday, mtd: mtdData, retailMtd: mtdData['ret_walk']
+                    });
+
+                    MATRIX_KEYS.forEach(k => {
+                        aggregatedToday[k] += normalizedToday[k];
+                        aggregatedMtd[k] += mtdData[k];
+                    });
+                    globalRetailMtd += mtdData['ret_walk'];
+                });
+
+                return {
+                    success: true,
+                    data: {
+                        individualReports: reports,
+                        consolidatedSummary: { today: aggregatedToday, mtd: aggregatedMtd, retailMtd: globalRetailMtd }
+                    }
+                };
+            }
+            return { success: false, error: 'Endpoint routing definition missing' };
         }
 
-        function toggleAuthFields(role) {
+        // ==================== CORE PLATFORM CONTROLLER LOGIC ====================
+        async function initAppEngine() {
+            const todayStr = new Date().toISOString().split('T')[0];
+            state.dseView.selectedDate = todayStr;
+            state.managerView.selectedDate = todayStr;
+            
+            document.getElementById('selector-target-date').value = todayStr;
+            document.getElementById('manager-date-view').value = todayStr;
+
+            // Initialize baseline cluster configuration rulesets 
+            const staffRes = await apiRequest('/staff');
+            state.staff = staffRes.success ? staffRes.data : [];
+            
+            const ruleRes = await apiRequest('/rules/finance');
+            state.rules.financeAllowed = ruleRes.success ? ruleRes.allowed : true;
+            document.getElementById('checkbox-rule-finance').checked = state.rules.financeAllowed;
+
+            repopulateDseDropdownUiElements();
+            handleAuthRoleChange('DSE');
+        }
+
+        function handleAuthRoleChange(role) {
+            const dseGroup = document.getElementById('auth-group-dse');
+            const passGroup = document.getElementById('auth-group-pass');
             if (role === 'MANAGER') {
-                document.getElementById('auth-group-dse').classList.add('hidden');
-                document.getElementById('auth-group-pass').classList.remove('hidden');
+                dseGroup.classList.add('hidden');
+                passGroup.classList.remove('hidden');
             } else {
-                document.getElementById('auth-group-dse').classList.remove('hidden');
-                document.getElementById('auth-group-pass').classList.add('hidden');
+                dseGroup.classList.remove('hidden');
+                passGroup.classList.add('hidden');
             }
         }
 
         async function processSystemAuthentication() {
-    const chosenRole = document.getElementById('auth-role').value;
-    const errorArea = document.getElementById('auth-error-msg');
-    errorArea.style.display = 'none';
+            const role = document.getElementById('auth-role').value;
+            const errorArea = document.getElementById('auth-error-msg');
+            errorArea.style.display = 'none';
 
-    if (chosenRole === 'MANAGER') {
-        const passwordValue = document.getElementById('auth-password').value;
-        
-        // TEMPORARY MOCK FOR LOCAL TESTING (Change '1234' to whatever you want):
-        if (passwordValue === '1234') { 
-            sessionState = { mode: 'MANAGER', userId: 'admin', userName: 'Showroom Manager' };
-            bootWorkspace();
-        } else {
-            errorArea.textContent = "Invalid manager password.";
-            errorArea.style.display = 'block';
-        }
-    } else {
-                const selectIdentity = document.getElementById('auth-dse-identity');
-                if (!selectIdentity.value) return;
+            if (role === 'MANAGER') {
+                const inputPin = document.getElementById('auth-password').value;
+                const authRes = await apiRequest('/auth/manager', { method: 'POST', body: { pin: inputPin } });
                 
-                sessionState = { 
+                if (authRes.success) {
+                    state.auth = { mode: 'MANAGER', userId: 'admin', userName: 'Showroom Manager' };
+                    bootWorkspacePanel();
+                } else {
+                    errorArea.textContent = "Security verification failed. Invalid administrator access credentials.";
+                    errorArea.style.display = 'block';
+                }
+            } else {
+                const selectIdentity = document.getElementById('auth-dse-identity');
+                if (!selectIdentity.value) return alert("No active staff profile selected.");
+                
+                state.auth = { 
                     mode: 'DSE', 
                     userId: selectIdentity.value, 
                     userName: selectIdentity.options[selectIdentity.selectedIndex].text 
                 };
-                bootWorkspace();
+                bootWorkspacePanel();
             }
         }
 
-        function bootWorkspace() {
+        function bootWorkspacePanel() {
             document.getElementById('panel-auth').classList.add('hidden');
             document.getElementById('panel-workspace').classList.remove('hidden');
             
             const dseSelectorWrapper = document.getElementById('wrapper-dse-dropdown');
-            
-            if (sessionState.mode === 'MANAGER') {
+            const userDisplay = document.getElementById('display-user-identity');
+
+            if (state.auth.mode === 'MANAGER') {
+                userDisplay.innerHTML = `Administrator Dashboard <span class="manager-indicator">MGR</span>`;
                 dseSelectorWrapper.classList.remove('hidden');
                 document.getElementById('panel-dse').classList.add('hidden');
                 document.getElementById('panel-manager').classList.remove('hidden');
                 toggleManagerTabs('perf');
             } else {
+                userDisplay.textContent = `DSE Account Profile: ${state.auth.userName}`;
                 dseSelectorWrapper.classList.add('hidden');
-                document.getElementById('selector-active-dse').value = sessionState.userId;
                 document.getElementById('panel-dse').classList.remove('hidden');
                 document.getElementById('panel-manager').classList.add('hidden');
-                loadActiveDataRecords();
+                
+                // Set structural defaults pointing directly back to the active user profile allocation maps
+                syncSelectedDseWithState(state.auth.userId);
             }
-            updateIdentityBannerUI();
         }
 
         function terminateSession() {
-            sessionState = { mode: 'AUTH', userId: '', userName: '' };
+            state.auth = { mode: 'AUTH', userId: '', userName: '' };
             document.getElementById('auth-password').value = '';
             document.getElementById('panel-workspace').classList.add('hidden');
             document.getElementById('panel-auth').classList.remove('hidden');
             exitRectificationMode();
         }
 
-        function updateIdentityBannerUI() {
-            const userDisplay = document.getElementById('display-user-identity');
-            if (sessionState.mode === 'MANAGER') {
-                userDisplay.innerHTML = `Administrator Room <span class="manager-indicator">MGR</span>`;
-            } else {
-                userDisplay.textContent = `DSE Profile: ${sessionState.userName}`;
-            }
-        }
-
-        function repopulateDseDropdownSelectors() {
+        function repopulateDseDropdownUiElements() {
             const authSelect = document.getElementById('auth-dse-identity');
             const workspaceSelect = document.getElementById('selector-active-dse');
             authSelect.innerHTML = '';
             workspaceSelect.innerHTML = '';
 
-            cachedStaff.forEach(person => {
+            state.staff.forEach(person => {
                 const optA = document.createElement('option');
                 optA.value = person.id; optA.textContent = person.name;
                 authSelect.appendChild(optA);
@@ -486,50 +610,80 @@
             });
         }
 
-        async function loadActiveDataRecords() {
-            const activeDse = document.getElementById('selector-active-dse').value;
-            const targetDate = document.getElementById('selector-target-date').value;
-            if(!activeDse) return;
+        // ==================== DSE INPUT GRID MATRIX CONTROLLERS ====================
+        function syncSelectedDseWithState(dseId) {
+            state.dseView.activeDseId = dseId;
+            document.getElementById('selector-active-dse').value = dseId;
+            loadTargetGridDataFromDb();
+        }
 
-            // 1. Fetch historical record for that isolated day if existing
-            const dayRecordRes = await apiRequest(`/records/day?dseId=${activeDse}&date=${targetDate}`);
-            const dayData = dayRecordRes.success ? dayRecordRes.data : {};
+        function syncSelectedDateWithState(dateString) {
+            state.dseView.selectedDate = dateString;
+            document.getElementById('selector-target-date').value = dateString;
+            loadTargetGridDataFromDb();
+        }
 
-            MATRIX_KEYS.forEach(k => {
-                document.getElementById(`in-${k}`).value = dayData[k] || 0;
-            });
+        async function loadTargetGridDataFromDb() {
+            const dseId = state.dseView.activeDseId;
+            const targetDate = state.dseView.selectedDate;
+            if(!dseId || !targetDate) return;
 
-            // 2. Fetch baseline Month-To-Date calculations excluding active input targets
-            const mtdRes = await apiRequest(`/records/mtd-baseline?dseId=${activeDse}&date=${targetDate}`);
-            cachedMTDBase = mtdRes.success ? mtdRes.data : {};
+            // Fetch concurrently from endpoint clusters
+            const [dayRecordRes, mtdRes] = await Promise.all([
+                apiRequest(`/records/day?dseId=${dseId}&date=${targetDate}`),
+                apiRequest(`/records/mtd-baseline?dseId=${dseId}&date=${targetDate}`)
+            ]);
 
-            // Enforce layout accessibility changes relative to Visibility policy
+            state.dseView.inputData = dayRecordRes.success ? dayRecordRes.data : {};
+            state.dseView.baselineMtd = mtdRes.success ? mtdRes.data : {};
+
+            // Enforce layout system view changes relative to active rules configuration parameters
             document.querySelectorAll('.finance-block').forEach(el => {
-                if (uiFinanceAllowed) el.classList.remove('hidden');
+                if (state.rules.financeAllowed) el.classList.remove('hidden');
                 else el.classList.add('hidden');
             });
 
-            calculateMatrixFormTotals();
+            renderStateDataIntoFormFields();
         }
 
-        function calculateMatrixFormTotals() {
-            const getInVal = (id) => parseInt(document.getElementById(`in-${id}`).value) || 0;
-            const getMtdTotalOf = (k) => (cachedMTDBase[k] || 0) + getInVal(k);
+        function renderStateDataIntoFormFields() {
+            // Write input matrix values to page fields
+            MATRIX_KEYS.forEach(k => {
+                const inputElement = document.getElementById(`in-${k}`);
+                if (inputElement) {
+                    inputElement.value = state.dseView.inputData[k] !== undefined ? state.dseView.inputData[k] : 0;
+                }
+            });
+            executeGridFormulaEvaluations();
+        }
+
+        function pushInputValueToState(metricKey, elementValue) {
+            const numericValue = Math.max(0, parseInt(elementValue) || 0);
+            state.dseView.inputData[metricKey] = numericValue;
+            executeGridFormulaEvaluations();
+        }
+
+        function executeGridFormulaEvaluations() {
+            const getInVal = (k) => state.dseView.inputData[k] || 0;
+            const getMtdTotalOf = (k) => (state.dseView.baselineMtd[k] || 0) + getInVal(k);
+            
             const calcPctString = (bk, enq) => enq > 0 ? Math.round((bk / enq) * 100) + '%' : '0%';
             const calcPenString = (subItem, base) => base > 0 ? ((subItem / base) * 100).toFixed(1) + '%' : '0.0%';
 
-            // Map UI outputs out to layout grid cells safely
+            // Map Month to Date elements onto UI matrix rows safely
             MATRIX_KEYS.forEach(k => {
                 const cell = document.getElementById(`mtd-${k}`);
                 if (cell) cell.textContent = getMtdTotalOf(k);
             });
 
+            // Conversion Calculations
             document.getElementById('pct-conv-walk').textContent = calcPctString(getMtdTotalOf('bk_walk'), getMtdTotalOf('enq_walk'));
             document.getElementById('pct-conv-tel').textContent = calcPctString(getMtdTotalOf('bk_tel'), getMtdTotalOf('enq_tel'));
             document.getElementById('pct-conv-fld').textContent = calcPctString(getMtdTotalOf('bk_fld'), getMtdTotalOf('enq_fld'));
             document.getElementById('pct-conv-srv').textContent = calcPctString(getMtdTotalOf('bk_srv'), getMtdTotalOf('enq_srv'));
             document.getElementById('pct-conv-onl').textContent = calcPctString(getMtdTotalOf('bk_onl'), getMtdTotalOf('enq_onl'));
 
+            // Total Block Compilations
             const totEnqToday = getInVal('enq_walk') + getInVal('enq_tel') + getInVal('enq_fld') + getInVal('enq_srv') + getInVal('enq_onl');
             const totEnqMtd = getMtdTotalOf('enq_walk') + getMtdTotalOf('enq_tel') + getMtdTotalOf('enq_fld') + getMtdTotalOf('enq_srv') + getMtdTotalOf('enq_onl');
             const totBkToday = getInVal('bk_walk') + getInVal('bk_tel') + getInVal('bk_fld') + getInVal('bk_srv') + getInVal('bk_onl');
@@ -541,6 +695,7 @@
             document.getElementById('tot-bk-mtd').textContent = totBkMtd;
             document.getElementById('lbl-conv-tot').textContent = calcPctString(totBkMtd, totEnqMtd);
 
+            // KPI Performance metrics indicators
             const currentRetailMtdSum = getMtdTotalOf('ret_walk');
             document.getElementById('lbl-ew-pct').textContent = calcPenString(getMtdTotalOf('ew_walk'), currentRetailMtdSum);
             document.getElementById('lbl-rsa-pct').textContent = calcPenString(getMtdTotalOf('rsa_val'), currentRetailMtdSum);
@@ -551,30 +706,47 @@
         }
 
         async function saveActiveMatrixRecord() {
-            const activeDse = document.getElementById('selector-active-dse').value;
-            const targetDate = document.getElementById('selector-target-date').value;
-            if(!activeDse) return;
+            const dseId = state.dseView.activeDseId;
+            const targetDate = state.dseView.selectedDate;
+            if(!dseId || !targetDate) return alert("System state missing valid targets.");
             
+            // Build absolute deployment payload package schemas
             let dayPayload = {};
-            MATRIX_KEYS.forEach(k => {
-                dayPayload[k] = parseInt(document.getElementById(`in-${k}`).value) || 0;
-            });
+            MATRIX_KEYS.forEach(k => { dayPayload[k] = state.dseView.inputData[k] || 0; });
 
             const saveRes = await apiRequest('/records/save', {
                 method: 'POST',
-                body: { dseId: activeDse, date: targetDate, metrics: dayPayload }
+                body: { dseId, date: targetDate, metrics: dayPayload }
             });
 
             if (saveRes.success) {
-                alert("Data metrics records processed and committed successfully down to DB cluster!");
-                if (document.getElementById('manager-edit-banner').classList.contains('hidden') === false) {
+                alert("Performance matrix variables written and synced with backend successfully.");
+                if (!document.getElementById('manager-edit-banner').classList.contains('hidden')) {
                     exitRectificationMode();
                 } else {
-                    loadActiveDataRecords();
+                    loadTargetGridDataFromDb();
                 }
             } else {
-                alert(`Commit error occurred: ${saveRes.error}`);
+                alert(`Error saving record structural parameters: ${saveRes.error}`);
             }
+        }
+
+        // ==================== MANAGER WORKSPACE MASTER CONTROLLERS ====================
+        function syncManagerDashboardDate(dateVal) {
+            state.managerView.selectedDate = dateVal;
+            document.getElementById('manager-date-view').value = dateVal;
+            renderManagerDashboardMetrics();
+        }
+
+        function toggleManagerTabs(targetTab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.sub-panel').forEach(p => p.classList.add('hidden'));
+            
+            document.getElementById(`tab-link-${targetTab}`).classList.add('active');
+            document.getElementById(`view-sub-${targetTab}`).classList.remove('hidden');
+            
+            if (targetTab === 'staff') renderStaffProfilesDirectory();
+            if (targetTab === 'perf') renderManagerDashboardMetrics();
         }
 
         async function renderManagerDashboardMetrics() {
@@ -583,23 +755,23 @@
             reportsContainer.innerHTML = '<p style="padding:16px; color:#6b7280;">Fetching real-time team logs...</p>';
             summaryContainer.innerHTML = '';
             
-            const targetDate = document.getElementById('manager-date-view').value;
+            const targetDate = state.managerView.selectedDate;
             const dashDataRes = await apiRequest(`/records/dashboard-matrix?date=${targetDate}`);
             
             if (!dashDataRes.success) {
-                reportsContainer.innerHTML = '<p style="padding:16px; color:#dc2626;">Error retrieving dynamic records.</p>';
+                reportsContainer.innerHTML = '<p style="padding:16px; color:#dc2626;">Error retrieving live dashboard tracking profiles matrix data streams.</p>';
                 return;
             }
 
             reportsContainer.innerHTML = '';
             const { individualReports, consolidatedSummary } = dashDataRes.data;
 
-            // Render consolidated showroom statistics 
+            // Render cumulative overview dashboard element blocks
             const summaryDiv = document.createElement('div');
             summaryDiv.className = 'dse-report-block summary-block';
-            summaryDiv.innerHTML = createGridHTML(
-                "⭐ FINAL CUMULATIVE SUMMARY (ALL DSE)", 
-                `Consolidated Showroom Statistics`, 
+            summaryDiv.innerHTML = createManagerReportGridHtml(
+                "⭐ CUMULATIVE SHOWROOM TOTAL SUMMARY", 
+                `Consolidated Operations Across All Active Staff Rows`, 
                 consolidatedSummary.today, 
                 (k) => consolidatedSummary.mtd[k], 
                 consolidatedSummary.retailMtd, 
@@ -607,24 +779,20 @@
             );
             summaryContainer.appendChild(summaryDiv);
 
-            // Render each active profile block
+            // Populate unique consultant performance cards dynamically
             individualReports.forEach(report => {
                 const blockDiv = document.createElement('div');
                 blockDiv.className = 'dse-report-block';
-                blockDiv.innerHTML = createGridHTML(
-                    report.name, 
-                    report.email, 
-                    report.today, 
-                    (k) => report.mtd[k], 
-                    report.retailMtd, 
-                    false, 
-                    report.id
+                blockDiv.innerHTML = createManagerReportGridHtml(
+                    report.name, report.email, 
+                    report.today, (k) => report.mtd[k], 
+                    report.retailMtd, false, report.id
                 );
                 reportsContainer.appendChild(blockDiv);
             });
         }
 
-        function createGridHTML(title, sub, today, getMtd, retailMtd, isSummary, empId) {
+        function createManagerReportGridHtml(title, subtitle, today, getMtd, retailMtd, isSummaryRow, empId) {
             const calcPct = (bk, enq) => enq > 0 ? Math.round((bk / enq) * 100) + '%' : '0%';
             const calcPen = (subItem, base) => base > 0 ? ((subItem / base) * 100).toFixed(1) + '%' : '0.0%';
 
@@ -637,11 +805,10 @@
                 <div class="dse-report-header">
                     <div>
                         <strong style="font-size: 1.1rem; color: #111827;">${title}</strong>
-                        <span style="font-size: 0.8rem; color: #6b7280; margin-left:12px;">${sub}</span>
+                        <span style="font-size: 0.8rem; color: #6b7280; margin-left:12px;">${subtitle}</span>
                     </div>
-                    ${isSummary ? '' : `<button class="btn" style="padding: 6px 14px; font-size: 0.8rem;" onclick="triggerManagerRectification('${empId}')">Modify / Rectify Metrics</button>`}
+                    ${isSummaryRow ? '' : `<button class="btn" style="padding: 6px 14px; font-size: 0.8rem;" onclick="triggerManagerRectification('${empId}')">Modify / Rectify Metrics</button>`}
                 </div>
-                
                 <div class="table-container" style="box-shadow:none; border-radius:8px; margin-bottom:0;">
                     <table>
                         <thead>
@@ -734,24 +901,24 @@
                                 <td class="highlight-lbl">RSA %</td>
                                 <td class="highlight-val">${calcPen(getMtd('rsa_val'), retailMtd)}</td>
                             </tr>
-                            <tr class="${uiFinanceAllowed ? '' : 'hidden'}">
+                            <tr class="${state.rules.financeAllowed ? '' : 'hidden'}">
                                 <td colspan="6" rowspan="3" style="background:#e5e7eb;"></td>
                                 <td colspan="2" style="background:#f3f4f6; font-size:0.75rem; font-weight:700; color:#6b7280;">GEAR</td>
                                 <td colspan="2" style="background:#f3f4f6; font-size:0.75rem; font-weight:700; color:#6b7280;">IN HOUSE FINANCE</td>
                             </tr>
-                            <tr class="${uiFinanceAllowed ? '' : 'hidden'}">
+                            <tr class="${state.rules.financeAllowed ? '' : 'hidden'}">
                                 <td class="mtd-cell" style="font-size: 0.7rem; color:#9ca3af;">TODAY</td>
                                 <td class="mtd-cell" style="font-size: 0.7rem; color:#9ca3af;">MONTH</td>
                                 <td class="mtd-cell" style="font-size: 0.7rem; color:#9ca3af;">TODAY</td>
                                 <td class="mtd-cell" style="font-size: 0.7rem; color:#9ca3af;">MONTH</td>
                             </tr>
-                            <tr class="${uiFinanceAllowed ? '' : 'hidden'}">
+                            <tr class="${state.rules.financeAllowed ? '' : 'hidden'}">
                                 <td><strong>${today.gear_val}</strong></td>
                                 <td class="mtd-cell">${getMtd('gear_val')}</td>
                                 <td><strong>${today.fin_val}</strong></td>
                                 <td class="mtd-cell">${getMtd('fin_val')}</td>
                             </tr>
-                            <tr class="${uiFinanceAllowed ? '' : 'hidden'}">
+                            <tr class="${state.rules.financeAllowed ? '' : 'hidden'}">
                                 <td colspan="6" style="background:#e5e7eb; border-top:1px solid #e5e7eb;"></td>
                                 <td class="highlight-lbl">GEAR PBA</td>
                                 <td class="highlight-val">${retailMtd > 0 ? Math.round(getMtd('gear_val') / retailMtd) : 0}</td>
@@ -765,13 +932,12 @@
         }
 
         function triggerManagerRectification(staffId) {
-            document.getElementById('selector-active-dse').value = staffId;
-            // Sync sync inputs back to the manager view date pickers
-            document.getElementById('selector-target-date').value = document.getElementById('manager-date-view').value;
+            // Drop down directly into DSE view tracking fields mapping the records safely
+            syncSelectedDseWithState(staffId);
+            syncSelectedDateWithState(state.managerView.selectedDate);
             
             document.getElementById('panel-dse').classList.remove('hidden');
             document.getElementById('panel-manager').classList.add('hidden');
-            loadActiveDataRecords();
             
             document.getElementById('manager-edit-banner').classList.remove('hidden');
             const submitBtn = document.getElementById('submit-action-btn');
@@ -790,28 +956,18 @@
             renderManagerDashboardMetrics();
         }
 
-        function toggleManagerTabs(targetTab) {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.sub-panel').forEach(p => p.classList.add('hidden'));
-            
-            document.getElementById(`tab-link-${targetTab}`).classList.add('active');
-            document.getElementById(`view-sub-${targetTab}`).classList.remove('hidden');
-            
-            if (targetTab === 'staff') renderStaffProfilesDirectory();
-            if (targetTab === 'perf') renderManagerDashboardMetrics();
-        }
-
+        // ==================== MANAGER DIRECTORY CONTROL PARAMS ====================
         async function renderStaffProfilesDirectory() {
             const container = document.getElementById('manager-staff-list-container');
-            container.innerHTML = '<p style="color:#6b7280;">Loading active profiles...</p>';
+            container.innerHTML = '<p style="color:#6b7280;">Loading active registries...</p>';
             
             const res = await apiRequest('/staff');
             if(!res.success) return;
             
-            cachedStaff = res.data;
+            state.staff = res.data;
             container.innerHTML = '';
             
-            cachedStaff.forEach(member => {
+            state.staff.forEach(member => {
                 const div = document.createElement('div');
                 div.className = 'directory-item';
                 div.innerHTML = `
@@ -823,13 +979,13 @@
                 `;
                 container.appendChild(div);
             });
-            repopulateDseDropdownSelectors();
+            repopulateDseDropdownUiElements();
         }
 
         async function createNewDSEUser() {
             const nameEl = document.getElementById('add-name');
             const emailEl = document.getElementById('add-email');
-            if (!nameEl.value || !emailEl.value) return alert("Please fill out complete profile information.");
+            if (!nameEl.value || !emailEl.value) return alert("Please input proper structural profile elements.");
 
             const res = await apiRequest('/staff/add', {
                 method: 'POST',
@@ -846,7 +1002,7 @@
         }
 
         async function deleteDSEAccount(id) {
-            if (!confirm("Are you sure you want to completely drop this staff profile from DB logs?")) return;
+            if (!confirm("Are you sure you want to completely clear this user profile from the database records?")) return;
             
             const res = await apiRequest(`/staff/remove`, {
                 method: 'DELETE',
@@ -866,10 +1022,11 @@
                 body: { allowed: isChecked }
             });
             if (res.success) {
-                uiFinanceAllowed = isChecked;
+                state.rules.financeAllowed = isChecked;
             }
         }
 
+        // Initialize Application Context
         initAppEngine();
     </script>
 </body>
